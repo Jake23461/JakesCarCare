@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import Gallery from './components/Gallery';
@@ -60,6 +60,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage onBookNow={openBookingModal} onLeaveReview={openReviewModal} />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/adminjake2005" element={<Admin />} />
           <Route path="/reviews" element={<Testimonials onLeaveReview={openReviewModal} />} />
         </Routes>
         <Footer onLeaveReview={openReviewModal} />
