@@ -1,4 +1,5 @@
 <script>
-  // Redirect all 404s to index.html for SPA routing
-  location.replace('/JakesCarCare/' + 'index.html');
+  // Redirect all 404s to index.html for SPA routing, preserving the path
+  var path = location.pathname.replace('/JakesCarCare', '');
+  location.replace('/JakesCarCare/index.html?redirect=' + encodeURIComponent(path + location.search + location.hash));
 </script> 
