@@ -24,7 +24,7 @@ export default function FAQ() {
             </h2>
             <div id="collapse2" className="accordion-collapse collapse" aria-labelledby="faq2" data-bs-parent="#faqAccordion">
               <div className="accordion-body text-light">
-                Yes! We come to your home or workplace for your convenience.
+                Yes! We come to your home or workplace for your convenience, all we need is an outlet and a hose tap!.
               </div>
             </div>
           </div>
@@ -36,7 +36,7 @@ export default function FAQ() {
             </h2>
             <div id="collapse3" className="accordion-collapse collapse" aria-labelledby="faq3" data-bs-parent="#faqAccordion">
               <div className="accordion-body text-light">
-                We accept cash, card, and contactless payments.
+                We accept cash Revolut payments.
               </div>
             </div>
           </div>

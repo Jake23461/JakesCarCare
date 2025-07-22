@@ -4,7 +4,7 @@ export default function Footer() {
       <div className="container-fluid px-4 d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
         <div className="d-flex align-items-center mb-3 mb-md-0">
           <img 
-            src="/gallery/Logo.png" 
+            src={import.meta.env.BASE_URL + 'gallery/Logo.png'} 
             alt="Jakes Car Care Logo" 
             style={{ height: 44, width: 44, objectFit: 'contain', marginRight: 12, filter: 'brightness(0) invert(1)' }}
           />

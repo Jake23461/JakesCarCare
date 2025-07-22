@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 
 const heroImages = [
-  '/gallery/option1.jpg',
-  '/gallery/option 4.jpg',
-  '/gallery/option 3.jpg',
+  import.meta.env.BASE_URL + 'gallery/option1.jpg',
+  import.meta.env.BASE_URL + 'gallery/option 4.jpg',
+  import.meta.env.BASE_URL + 'gallery/option 3.jpg',
 ];
 
 export default function Hero({ onBookNow }) {
@@ -44,7 +44,7 @@ export default function Hero({ onBookNow }) {
         <div className={`transition-opacity ${isVisible ? 'opacity-100' : 'opacity-0'}`} style={{ transition: 'opacity 1s ease-in-out' }}>
           <div className="mb-4">
             <img 
-              src="/gallery/Logo.png" 
+              src={import.meta.env.BASE_URL + 'gallery/Logo.png'} 
               alt="Jakes Car Care Logo" 
               className="img-fluid"
               style={{

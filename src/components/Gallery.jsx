@@ -116,7 +116,7 @@ export default function Gallery() {
                   <div className="position-relative">
                     <div className="ratio ratio-16x9">
                       <img 
-                        src={item.poster || item.src} 
+                        src={item.poster ? import.meta.env.BASE_URL + item.poster.replace(/^\//, '') : item.src.startsWith('http') ? item.src : import.meta.env.BASE_URL + item.src.replace(/^\//, '')} 
                         className="w-100 h-100" 
                         alt={item.label} 
                         style={{ objectFit: 'cover', cursor: 'pointer' }}
@@ -149,7 +149,7 @@ export default function Gallery() {
                   <div className="position-relative">
                     <div className="ratio ratio-4x3">
                       <img 
-                        src={item.thumb || item.src} 
+                        src={item.thumb ? import.meta.env.BASE_URL + item.thumb.replace(/^\//, '') : item.src.startsWith('http') ? item.src : import.meta.env.BASE_URL + item.src.replace(/^\//, '')} 
                         loading="lazy"
                         className="w-100 h-100" 
                         alt={item.label} 

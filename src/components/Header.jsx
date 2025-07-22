@@ -19,7 +19,7 @@ export default function Header({ onLeaveReview }) {
         <Link className="navbar-brand d-flex align-items-center" to="/">
           {/* Logo image */}
           <img 
-            src="/gallery/Logo.png" 
+            src={import.meta.env.BASE_URL + 'gallery/Logo.png'} 
             alt="Jakes Car Care Logo" 
             className="me-2"
             style={{ 
