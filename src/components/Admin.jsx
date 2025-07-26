@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { db, storage } from '../firebase';
 import { collection, getDocs, addDoc, deleteDoc, doc, Timestamp, query, orderBy, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { ConfirmModal } from './BookingModal';
 
 export default function Admin() {
   const [bookings, setBookings] = useState([]);
@@ -36,8 +37,21 @@ export default function Admin() {
     type: 'single' // 'single', 'beforeAfter', 'video'
   });
 
+  // Enhanced gallery management states
+  const [editingItem, setEditingItem] = useState(null);
+  const [editingBookingPrice, setEditingBookingPrice] = useState(null);
+
   const SERVICES = ['Full Valet', 'Exterior Only', 'Interior Only'];
   const AVAILABLE_TIMES = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
+
+  // State for confirmation modal
+  const [confirmModal, setConfirmModal] = useState({
+    show: false,
+    action: null, // 'deleteBooking', 'deleteReview', 'deleteGalleryItem'
+    id: null,
+    extra: null, // for gallery: fileName
+    message: '',
+  });
 
   useEffect(() => {
     fetchBookings();
@@ -124,15 +138,13 @@ export default function Admin() {
     }
   };
 
-  const handleCancelBooking = async (bookingId) => {
-    if (window.confirm('Are you sure you want to cancel this booking?')) {
-      try {
-        await deleteDoc(doc(db, 'bookings', bookingId));
-        fetchBookings();
-      } catch (err) {
-        console.error('Error canceling booking:', err);
-      }
-    }
+  const handleCancelBooking = (bookingId) => {
+    setConfirmModal({
+      show: true,
+      action: 'deleteBooking',
+      id: bookingId,
+      message: 'Are you sure you want to delete this booking? This cannot be undone.',
+    });
   };
 
   const handleApproveReview = async (reviewId) => {
@@ -146,15 +158,13 @@ export default function Admin() {
     }
   };
 
-  const handleRejectReview = async (reviewId) => {
-    if (window.confirm('Are you sure you want to reject this review? This action cannot be undone.')) {
-      try {
-        await deleteDoc(doc(db, 'reviews', reviewId));
-        fetchReviews();
-      } catch (err) {
-        console.error('Error rejecting review:', err);
-      }
-    }
+  const handleRejectReview = (reviewId) => {
+    setConfirmModal({
+      show: true,
+      action: 'deleteReview',
+      id: reviewId,
+      message: 'Are you sure you want to delete this review? This cannot be undone.',
+    });
   };
 
   const formatDate = (dateString) => {
@@ -167,7 +177,10 @@ export default function Admin() {
     return date.toLocaleDateString('en-GB');
   };
 
-  const getServicePrice = (service, ironFalloutAddon) => {
+  const getServicePrice = (service, ironFalloutAddon, customPrice = null) => {
+    if (customPrice !== null) {
+      return `€${customPrice}`;
+    }
     const prices = {
       'Full Valet': '€90–€100',
       'Exterior Only': '€40',
@@ -264,11 +277,17 @@ export default function Admin() {
   };
 
   const getTotalEarnings = () => {
-    return bookings.reduce((sum, b) => sum + getServicePriceValue(b.service, b.ironFalloutAddon), 0);
+    return bookings.reduce((sum, b) => {
+      const price = b.customPrice !== null ? b.customPrice : getServicePriceValue(b.service, b.ironFalloutAddon);
+      return sum + price;
+    }, 0);
   };
 
   const getActualTotalEarned = () => {
-    return bookings.filter(b => b.completed).reduce((sum, b) => sum + getServicePriceValue(b.service, b.ironFalloutAddon), 0);
+    return bookings.filter(b => b.completed).reduce((sum, b) => {
+      const price = b.customPrice !== null ? b.customPrice : getServicePriceValue(b.service, b.ironFalloutAddon);
+      return sum + price;
+    }, 0);
   };
 
   const handleToggleCompleted = async (booking) => {
@@ -282,17 +301,17 @@ export default function Admin() {
     setUpdatingBooking(null);
   };
 
-  const handleDragOver = (e) => {
+  const handleFileDragOver = (e) => {
     e.preventDefault();
     setDragOver(true);
   };
 
-  const handleDragLeave = (e) => {
+  const handleFileDragLeave = (e) => {
     e.preventDefault();
     setDragOver(false);
   };
 
-  const handleDrop = async (e) => {
+  const handleFileDrop = async (e) => {
     e.preventDefault();
     setDragOver(false);
     
@@ -426,23 +445,40 @@ export default function Admin() {
     }
   };
 
-  const deleteGalleryItem = async (itemId, fileName) => {
-    if (window.confirm('Are you sure you want to delete this item?')) {
-      try {
-        // Delete from Firestore
-        await deleteDoc(doc(db, 'gallery', itemId));
-        
-        // Delete from Storage
-        const storageRef = ref(storage, `gallery/${fileName}`);
-        await deleteObject(storageRef);
-        
-        // Refresh gallery items
+  const deleteGalleryItem = (itemId, fileName) => {
+    setConfirmModal({
+      show: true,
+      action: 'deleteGalleryItem',
+      id: itemId,
+      extra: fileName,
+      message: 'Are you sure you want to delete this gallery item? This cannot be undone.',
+    });
+  };
+
+  // Handler for confirming destructive actions
+  const handleConfirm = async () => {
+    const { action, id, extra } = confirmModal;
+    setConfirmModal({ ...confirmModal, show: false });
+    try {
+      if (action === 'deleteBooking') {
+        await deleteDoc(doc(db, 'bookings', id));
+        await fetchBookings();
+        alert('Booking deleted successfully!');
+      } else if (action === 'deleteReview') {
+        await deleteDoc(doc(db, 'reviews', id));
+        await fetchReviews();
+        alert('Review deleted successfully!');
+      } else if (action === 'deleteGalleryItem') {
+        await deleteDoc(doc(db, 'gallery', id));
+        if (extra) {
+          const storageRef = ref(storage, `gallery/${extra}`);
+          try { await deleteObject(storageRef); } catch {}
+        }
         await fetchGalleryItems();
-        alert('Item deleted successfully!');
-      } catch (error) {
-        console.error('Error deleting item:', error);
-        alert('Error deleting item. Please try again.');
+        alert('Gallery item deleted successfully!');
       }
+    } catch (error) {
+      alert('Error deleting item. Please try again.');
     }
   };
 
@@ -455,6 +491,98 @@ export default function Admin() {
       console.error('Error updating item:', error);
       alert('Error updating item. Please try again.');
     }
+  };
+
+  // Enhanced gallery management functions
+  const updateItemOrder = async (itemId, newOrder) => {
+    try {
+      await updateDoc(doc(db, 'gallery', itemId), {
+        order: parseInt(newOrder)
+      });
+      await fetchGalleryItems();
+      console.log(`Updated item ${itemId} order to ${newOrder}`);
+    } catch (error) {
+      console.error('Error updating item order:', error);
+      alert('Error updating item order. Please try again.');
+    }
+  };
+
+  const reorderCategory = async (category) => {
+    try {
+      const categoryItems = galleryItems.filter(item => item.category === category);
+      if (categoryItems.length === 0) return;
+
+      // Assign sequential order numbers
+      for (let i = 0; i < categoryItems.length; i++) {
+        await updateDoc(doc(db, 'gallery', categoryItems[i].id), {
+          order: i + 1
+        });
+      }
+      
+      await fetchGalleryItems();
+      alert(`${category} items reordered successfully!`);
+    } catch (error) {
+      console.error('Error reordering category:', error);
+      alert('Error reordering category. Please try again.');
+    }
+  };
+
+  const startEditing = (item) => {
+    setEditingItem({
+      id: item.id,
+      label: item.label,
+      description: item.description,
+      category: item.category
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editingItem) return;
+    
+    try {
+      await updateDoc(doc(db, 'gallery', editingItem.id), {
+        label: editingItem.label,
+        description: editingItem.description,
+        category: editingItem.category
+      });
+      await fetchGalleryItems();
+      setEditingItem(null);
+      alert('Item updated successfully!');
+    } catch (error) {
+      console.error('Error updating item:', error);
+      alert('Error updating item. Please try again.');
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingItem(null);
+  };
+
+  const startEditingBookingPrice = (booking) => {
+    setEditingBookingPrice({
+      id: booking.id,
+      price: booking.customPrice || getServicePriceValue(booking.service, booking.ironFalloutAddon)
+    });
+  };
+
+  const saveBookingPrice = async () => {
+    if (!editingBookingPrice) return;
+    
+    try {
+      await updateDoc(doc(db, 'bookings', editingBookingPrice.id), {
+        customPrice: editingBookingPrice.price
+      });
+      await fetchBookings();
+      setEditingBookingPrice(null);
+      alert('Price updated successfully!');
+    } catch (error) {
+      console.error('Error updating booking price:', error);
+      alert('Error updating price. Please try again.');
+    }
+  };
+
+  const cancelBookingPriceEdit = () => {
+    setEditingBookingPrice(null);
   };
 
   const deleteBooking = async (bookingId) => {
@@ -567,7 +695,10 @@ export default function Admin() {
                     </thead>
                     <tbody>
                       {getWeeklyBookings().map(({ weekStart, days }, i) => {
-                        const weekTotal = days.flat().reduce((sum, b) => sum + getServicePriceValue(b.service, b.ironFalloutAddon), 0);
+                        const weekTotal = days.flat().reduce((sum, b) => {
+                          const price = b.customPrice !== null ? b.customPrice : getServicePriceValue(b.service, b.ironFalloutAddon);
+                          return sum + price;
+                        }, 0);
                         return (
                           <tr key={i}>
                             <td className="fw-bold">{weekStart.toLocaleDateString('en-GB')}</td>
@@ -589,7 +720,13 @@ export default function Admin() {
                                         <strong>{b.name}</strong>
                                         <span className="badge bg-secondary ms-1">{b.service}</span>
                                       </div>
-                                      <div className="small">{b.time} | €{getServicePriceValue(b.service, b.ironFalloutAddon)}</div>
+                                      <div className="small">
+                                        {b.time} | 
+                                        <span className={b.customPrice !== null ? 'text-warning fw-bold' : ''}>
+                                          €{b.customPrice !== null ? b.customPrice : getServicePriceValue(b.service, b.ironFalloutAddon)}
+                                        </span>
+                                        {b.customPrice !== null && <span className="text-info ms-1">(custom)</span>}
+                                      </div>
                                     </div>
                                   ))
                                 )}
@@ -761,7 +898,52 @@ export default function Admin() {
                                 <span className="badge bg-warning text-dark ms-1">+ Iron Fallout</span>
                               )}
                             </td>
-                            <td>{getServicePrice(booking.service, booking.ironFalloutAddon)}</td>
+                            <td>
+                              {editingBookingPrice?.id === booking.id ? (
+                                <div className="d-flex align-items-center gap-2">
+                                  <input
+                                    type="number"
+                                    className="form-control form-control-sm"
+                                    style={{ width: '80px' }}
+                                    value={editingBookingPrice.price}
+                                    onChange={(e) => setEditingBookingPrice({
+                                      ...editingBookingPrice,
+                                      price: parseFloat(e.target.value) || 0
+                                    })}
+                                    min="0"
+                                    step="0.01"
+                                  />
+                                  <button
+                                    className="btn btn-success btn-sm"
+                                    onClick={saveBookingPrice}
+                                    style={{ fontSize: '0.75rem', padding: '2px 6px' }}
+                                  >
+                                    ✓
+                                  </button>
+                                  <button
+                                    className="btn btn-secondary btn-sm"
+                                    onClick={cancelBookingPriceEdit}
+                                    style={{ fontSize: '0.75rem', padding: '2px 6px' }}
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="d-flex align-items-center gap-2">
+                                  <span className={booking.customPrice ? 'text-warning fw-bold' : ''}>
+                                    {getServicePrice(booking.service, booking.ironFalloutAddon, booking.customPrice)}
+                                  </span>
+                                  <button
+                                    className="btn btn-outline-primary btn-sm"
+                                    onClick={() => startEditingBookingPrice(booking)}
+                                    style={{ fontSize: '0.75rem', padding: '2px 6px' }}
+                                    title="Edit price"
+                                  >
+                                    ✏️
+                                  </button>
+                                </div>
+                              )}
+                            </td>
                             <td>
                               {booking.created?.toDate ? 
                                 booking.created.toDate().toLocaleDateString('en-GB') : 
@@ -774,7 +956,7 @@ export default function Admin() {
                             <td>
                               <button
                                 className="btn btn-danger btn-sm"
-                                onClick={() => deleteBooking(booking.id)}
+                                onClick={() => handleCancelBooking(booking.id)}
                               >
                                 Delete
                               </button>
@@ -883,6 +1065,7 @@ export default function Admin() {
 
         {/* Gallery Management Tab */}
         {activeTab === 'gallery' && (
+          
           <div className="tab-pane fade show active">
             <h2 className="h3 mb-4">Gallery Management</h2>
             {/* Upload Section */}
@@ -930,15 +1113,15 @@ export default function Admin() {
                   className={`border-2 border-dashed rounded p-5 text-center ${
                     dragOver ? 'border-primary bg-primary bg-opacity-10' : 'border-secondary'
                   }`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
+                  onDragOver={handleFileDragOver}
+                  onDragLeave={handleFileDragLeave}
+                  onDrop={handleFileDrop}
                 >
                   <div className="mb-3">
                     <i className="bi bi-cloud-upload fs-1 text-primary"></i>
                   </div>
                   <h5>Drag & Drop Files Here</h5>
-                  <p className="text-muted">or</p>
+                  <p className="text-light" style={{ opacity: 0.9 }}>or</p>
                   <input
                     type="file"
                     multiple
@@ -951,7 +1134,7 @@ export default function Admin() {
                   <label htmlFor="fileInput" className="btn btn-primary">
                     Choose Files
                   </label>
-                  <p className="text-muted mt-2">
+                  <p className="text-light mt-2" style={{ opacity: 0.9 }}>
                     Supported: Images (JPG, PNG, GIF) and Videos (MP4, WebM)
                   </p>
                   {uploading && (
@@ -963,16 +1146,93 @@ export default function Admin() {
                 </div>
               </div>
             </div>
+            {/* Gallery Management Tools */}
+            <div className="card bg-secondary mb-4">
+              <div className="card-body">
+                <h5 className="card-title text-primary mb-3">Gallery Management Tools</h5>
+                <div className="row">
+                  <div className="col-md-6">
+                    <div className="d-flex gap-2 mb-2">
+                      <button 
+                        className="btn btn-outline-info btn-sm"
+                        onClick={() => {
+                          const items = galleryItems.filter(item => item.category === 'beforeAfter');
+                          console.log('Before & After items:', items);
+                        }}
+                      >
+                        <i className="bi bi-list"></i> View Before & After ({galleryItems.filter(item => item.category === 'beforeAfter').length})
+                      </button>
+                      <button 
+                        className="btn btn-outline-info btn-sm"
+                        onClick={() => {
+                          const items = galleryItems.filter(item => item.category === 'interiors');
+                          console.log('Interior items:', items);
+                        }}
+                      >
+                        <i className="bi bi-list"></i> View Interiors ({galleryItems.filter(item => item.category === 'interiors').length})
+                      </button>
+                    </div>
+                    <div className="d-flex gap-2">
+                      <button 
+                        className="btn btn-outline-info btn-sm"
+                        onClick={() => {
+                          const items = galleryItems.filter(item => item.category === 'exteriors');
+                          console.log('Exterior items:', items);
+                        }}
+                      >
+                        <i className="bi bi-list"></i> View Exteriors ({galleryItems.filter(item => item.category === 'exteriors').length})
+                      </button>
+                      <button 
+                        className="btn btn-outline-info btn-sm"
+                        onClick={() => {
+                          const items = galleryItems.filter(item => item.category === 'videos');
+                          console.log('Video items:', items);
+                        }}
+                      >
+                        <i className="bi bi-list"></i> View Videos ({galleryItems.filter(item => item.category === 'videos').length})
+                      </button>
+                    </div>
+                  </div>
+                                     <div className="col-md-6">
+                     <div className="text-end">
+                       <small className="text-light" style={{ opacity: 0.9 }}>
+                         💡 <strong>Tip:</strong> Change the order number in the top-left corner of each item to reorder.
+                       </small>
+                       <br />
+                       <small className="text-light" style={{ opacity: 0.9 }}>
+                         📝 <strong>Note:</strong> Lower numbers appear first. Use "Reorder" button to auto-assign sequential numbers.
+                       </small>
+                     </div>
+                   </div>
+                </div>
+              </div>
+            </div>
+
             {/* Gallery Items Display */}
             <div className="row">
               {['beforeAfter', 'interiors', 'exteriors', 'videos'].map((category) => (
                 <div key={category} className="col-12 mb-4">
-                  <h4 className="text-primary text-capitalize mb-3">{category.replace(/([A-Z])/g, ' $1')}</h4>
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h4 className="text-primary text-capitalize mb-0">{category.replace(/([A-Z])/g, ' $1')}</h4>
+                    <div className="d-flex align-items-center gap-2">
+                                            <button
+                        className="btn btn-outline-warning btn-sm"
+                        onClick={() => reorderCategory(category)}
+                        title="Reorder items sequentially"
+                      >
+                        <i className="bi bi-arrow-clockwise"></i> Reorder
+                      </button>
+                      <span className="badge bg-secondary">
+                        {galleryItems.filter(item => item.category === category).length} items
+                      </span>
+                    </div>
+                  </div>
                   <div className="row g-3">
-                    {galleryItems
-                      .filter(item => item.category === category)
-                      .map((item) => (
-                        <div key={item.id} className="col-md-4 col-lg-3">
+                                          {galleryItems
+                        .filter(item => item.category === category)
+                        .sort((a, b) => (a.order || 0) - (b.order || 0))
+                        .map((item, index) => (
+                          <div key={item.id} className="col-md-4 col-lg-3">
                           <div className="card bg-secondary h-100">
                             <div className="position-relative">
                               {item.type === 'video' ? (
@@ -996,30 +1256,120 @@ export default function Admin() {
                                   />
                                 </div>
                               )}
-                              <button
-                                className="btn btn-danger btn-sm position-absolute top-0 end-0 m-2"
-                                onClick={() => deleteGalleryItem(item.id, item.fileName)}
-                              >
-                                <i className="bi bi-trash"></i> Delete
-                              </button>
+                              <div className="position-absolute top-0 end-0 m-2 d-flex gap-1">
+                                <button
+                                  className="btn btn-warning btn-sm"
+                                  onClick={() => startEditing(item)}
+                                  title="Edit Item"
+                                >
+                                  <i className="bi bi-pencil"></i>
+                                </button>
+                                <button
+                                  className="btn btn-danger btn-sm"
+                                  onClick={() => deleteGalleryItem(item.id, item.fileName)}
+                                  title="Delete Item"
+                                >
+                                  <i className="bi bi-trash"></i>
+                                </button>
+                              </div>
+                              <div className="position-absolute top-0 start-0 m-2">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  className="form-control form-control-sm"
+                                  style={{
+                                    width: '50px',
+                                    height: '25px',
+                                    fontSize: '0.75rem',
+                                    textAlign: 'center',
+                                    background: 'rgba(0,0,0,0.8)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255,255,255,0.3)',
+                                    borderRadius: '4px'
+                                  }}
+                                  value={item.order || index + 1}
+                                  onChange={(e) => updateItemOrder(item.id, e.target.value)}
+                                  title="Change order number"
+                                />
+                              </div>
                             </div>
                             <div className="card-body">
-                              <h6 className="card-title">{item.label}</h6>
-                              <p className="card-text small text-muted">{item.description}</p>
-                              <small className="text-muted">
-                                {new Date(item.uploadedAt).toLocaleDateString()}
-                              </small>
+                              {editingItem && editingItem.id === item.id ? (
+                                <div>
+                                  <input
+                                    type="text"
+                                    className="form-control form-control-sm mb-2"
+                                    value={editingItem.label}
+                                    onChange={(e) => setEditingItem({...editingItem, label: e.target.value})}
+                                    placeholder="Title"
+                                  />
+                                  <textarea
+                                    className="form-control form-control-sm mb-2"
+                                    value={editingItem.description}
+                                    onChange={(e) => setEditingItem({...editingItem, description: e.target.value})}
+                                    placeholder="Description"
+                                    rows="2"
+                                  />
+                                  <select
+                                    className="form-select form-select-sm mb-2"
+                                    value={editingItem.category}
+                                    onChange={(e) => setEditingItem({...editingItem, category: e.target.value})}
+                                  >
+                                    <option value="beforeAfter">Before & After</option>
+                                    <option value="interiors">Interiors</option>
+                                    <option value="exteriors">Exteriors</option>
+                                    <option value="videos">Videos</option>
+                                  </select>
+                                  <div className="d-flex gap-1">
+                                    <button
+                                      className="btn btn-success btn-sm"
+                                      onClick={saveEdit}
+                                    >
+                                      <i className="bi bi-check"></i> Save
+                                    </button>
+                                    <button
+                                      className="btn btn-secondary btn-sm"
+                                      onClick={cancelEdit}
+                                    >
+                                      <i className="bi bi-x"></i> Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <h6 className="card-title">{item.label}</h6>
+                                                      <p className="card-text small text-light" style={{ opacity: 0.9 }}>{item.description}</p>
+                    <small className="text-light" style={{ opacity: 0.8 }}>
+                      {new Date(item.uploadedAt).toLocaleDateString()}
+                    </small>
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>
                       ))}
                   </div>
+                  {galleryItems.filter(item => item.category === category).length === 0 && (
+                    <div className="text-center py-4">
+                      <p className="text-light" style={{ opacity: 0.9 }}>No items in this category yet.</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </div>
         )}
       </div>
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        show={confirmModal.show}
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmModal({ ...confirmModal, show: false })}
+        title="Confirm Deletion"
+        message={confirmModal.message}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
     </section>
   );
 }

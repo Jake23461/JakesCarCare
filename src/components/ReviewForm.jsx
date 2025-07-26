@@ -10,6 +10,7 @@ export default function ReviewForm() {
     service: '',
     customerEmail: ''
   });
+  const [hoverRating, setHoverRating] = useState(0);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
@@ -118,15 +119,24 @@ export default function ReviewForm() {
                       <label className="form-label fw-semibold text-light">Rating *</label>
                       <div className="d-flex gap-2 mb-3" style={{ minHeight: '48px' }}>
                         {[1, 2, 3, 4, 5].map(star => (
-                          <button
+                          <span
                             key={star}
-                            type="button"
-                            className={`btn btn-outline-warning ${formData.rating >= star ? 'btn-warning' : ''}`}
+                            role="button"
+                            tabIndex={0}
+                            style={{
+                              fontSize: '2rem',
+                              color: (hoverRating || formData.rating) >= star ? '#ffc107' : '#e4e5e9',
+                              cursor: 'pointer',
+                              transition: 'color 0.2s',
+                              userSelect: 'none'
+                            }}
                             onClick={() => handleRatingChange(star)}
-                            style={{ width: '40px', height: '40px' }}
+                            onMouseEnter={() => setHoverRating(star)}
+                            onMouseLeave={() => setHoverRating(0)}
+                            aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
                           >
                             ★
-                          </button>
+                          </span>
                         ))}
                       </div>
                       <small className="text-light">Click to rate: {formData.rating} out of 5</small>

@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function Footer() {
   return (
     <footer className="bg-dark text-white py-4 mt-5 w-100 border-top border-danger" style={{letterSpacing: '0.01em'}}>
@@ -20,10 +22,23 @@ export default function Footer() {
           </span>
         </div>
         <div className="text-center small flex-grow-1 mb-3 mb-md-0">
-          © {new Date().getFullYear()} Jakes Car Care. All rights reserved.
+          <div>
+            <strong>Serving Roscommon, Longford & surrounding areas</strong>
+          </div>
+          <div>
+            <Link to="/service-areas" className="text-info fw-semibold">See all service areas</Link>
+          </div>
+          <div>
+            <span>See more photos & updates on our </span>
+            <a href="https://www.facebook.com/profile.php?id=61560837419584" target="_blank" rel="noopener noreferrer" className="text-info fw-semibold">Facebook page</a>
+            <span>!</span>
+          </div>
+          <div className="mt-2">
+            © {new Date().getFullYear()} Jakes Car Care. All rights reserved.
+          </div>
         </div>
         <div className="d-flex gap-3 justify-content-center">
-          <a href="#" className="text-white-50 footer-social" aria-label="Facebook">
+          <a href="https://www.facebook.com/YOUR_FACEBOOK_PAGE" target="_blank" rel="noopener noreferrer" className="text-white-50 footer-social" aria-label="Facebook">
             <i className="bi bi-facebook fs-5"></i>
           </a>
           <a href="#" className="text-white-50 footer-social" aria-label="Instagram">

@@ -88,7 +88,7 @@ export default function Hero({ onBookNow }) {
           >
             Professional car valeting services at your doorstep
           </p>
-          <div className="mb-4">
+          <div className="mb-4 d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
             <a 
               href="tel:0877665058"
               className="btn btn-outline-light btn-lg px-4 py-2 fw-semibold"
@@ -112,29 +112,51 @@ export default function Hero({ onBookNow }) {
             >
               📞 Call 087 766 5058
             </a>
+            <a
+              href="https://www.facebook.com/profile.php?id=61560837419584"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn d-inline-flex align-items-center justify-content-center"
+              style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                backgroundColor: '#4267B2',
+                color: '#fff',
+                fontSize: '2rem',
+                border: '2px solid #4267B2',
+                boxShadow: '0 2px 8px rgba(66,103,178,0.15)',
+                transition: 'background 0.2s, color 0.2s',
+              }}
+              aria-label="Facebook"
+            >
+              <i className="bi bi-facebook"></i>
+            </a>
           </div>
         </div>
-        <button
-          type="button"
-          className="btn btn-primary btn-lg px-5 py-3 fw-semibold shadow-lg"
-          style={{
-            fontSize: '1.1rem',
-            letterSpacing: '0.02em',
-            transition: 'all 0.3s ease',
-            border: '2px solid transparent'
-          }}
-          onClick={onBookNow}
-          onMouseEnter={(e) => {
-            e.target.style.transform = 'translateY(-2px)';
-            e.target.style.boxShadow = '0 8px 25px rgba(220,53,69,0.4)';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = 'translateY(0)';
-            e.target.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
-          }}
-        >
-          Book Now
-        </button>
+        <div className="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3 mt-3">
+          <button
+            type="button"
+            className="btn btn-primary btn-lg px-5 py-3 fw-semibold shadow-lg"
+            style={{
+              fontSize: '1.1rem',
+              letterSpacing: '0.02em',
+              transition: 'all 0.3s ease',
+              border: '2px solid transparent'
+            }}
+            onClick={onBookNow}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 8px 25px rgba(220,53,69,0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+            }}
+          >
+            Book Now
+          </button>
+        </div>
       </div>
     </section>
   );

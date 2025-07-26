@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 export default function Header({ onLeaveReview }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [pendingScroll, setPendingScroll] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -12,6 +15,37 @@ export default function Header({ onLeaveReview }) {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Scroll to #services after navigation to home
+  useEffect(() => {
+    if (pendingScroll && location.pathname === '/') {
+      const section = document.getElementById('services');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+      }
+      setPendingScroll(false);
+    }
+  }, [pendingScroll, location]);
+
+  // Add smooth scroll and menu close for Services link
+  const handleServicesClick = (e) => {
+    e.preventDefault();
+    // Close menu if open (for mobile)
+    const navCollapse = document.getElementById('navbarNav');
+    if (navCollapse && navCollapse.classList.contains('show')) {
+      navCollapse.classList.remove('show');
+    }
+    setMenuOpen(false);
+    if (location.pathname === '/') {
+      const section = document.getElementById('services');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      setPendingScroll(true);
+      navigate('/');
+    }
+  };
 
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark py-3">
@@ -43,13 +77,19 @@ export default function Header({ onLeaveReview }) {
             Jakes Car Care
           </span>
         </Link>
-        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" onClick={() => setMenuOpen(!menuOpen)}>
           <span className="navbar-toggler-icon"></span>
         </button>
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
             <li className="nav-item">
-              <a className="nav-link" href="#services">Services</a>
+              <a className="nav-link" href="#services" onClick={handleServicesClick}>Services</a>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/service-areas">Service Areas</Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/blog">Blog</Link>
             </li>
             <li className="nav-item">
               <a className="nav-link" href="#reviews" onClick={e => { e.preventDefault(); onLeaveReview(); }}>Reviews</a>
