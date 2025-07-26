@@ -2,26 +2,44 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://jakescarcare.ie/</loc>
+    <lastmod>2024-12-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://jakescarcare.ie/#/service-areas</loc>
+    <loc>https://jakescarcare.ie/service-areas</loc>
+    <lastmod>2024-12-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://jakescarcare.ie/#/blog</loc>
+    <loc>https://jakescarcare.ie/blog</loc>
+    <lastmod>2024-12-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://jakescarcare.ie/#/reviews</loc>
+    <loc>https://jakescarcare.ie/blog/keep-your-car-clean-in-roscommon-winter</loc>
+    <lastmod>2024-07-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://jakescarcare.ie/#/blog/keep-your-car-clean-in-roscommon-winter</loc>
+    <loc>https://jakescarcare.ie/blog/mobile-valeting-for-rural-drivers-longford</loc>
+    <lastmod>2024-07-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://jakescarcare.ie/#/blog/mobile-valeting-for-rural-drivers-longford</loc>
+    <loc>https://jakescarcare.ie/blog/how-often-should-you-get-your-car-detailed</loc>
+    <lastmod>2024-07-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://jakescarcare.ie/#/blog/how-often-should-you-get-your-car-detailed</loc>
-  </url>
-  <url>
-    <loc>https://jakescarcare.ie/#/blog/whats-included-in-a-full-valet</loc>
+    <loc>https://jakescarcare.ie/blog/whats-included-in-a-full-valet</loc>
+    <lastmod>2024-07-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>
