@@ -34,6 +34,8 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
   const [touched, setTouched] = useState({});
   const [existingBookings, setExistingBookings] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(true);
+  const [currentAvailableTimes, setCurrentAvailableTimes] = useState([]);
+  const [loadingTimes, setLoadingTimes] = useState(false);
 
   // Calendar state
   const today = new Date();
@@ -42,12 +44,17 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
   useEffect(() => {
     fetchExistingBookings();
     
-    // Refresh bookings every 30 seconds to keep availability current
+    // Refresh bookings every 15 seconds to keep availability current (reduced from 30 seconds)
     const interval = setInterval(() => {
       fetchExistingBookings();
-    }, 30000);
+    }, 15000);
     
     return () => clearInterval(interval);
+  }, []);
+
+  // Initialize available times
+  useEffect(() => {
+    setCurrentAvailableTimes(AVAILABLE_TIMES);
   }, []);
 
   const fetchExistingBookings = async () => {
@@ -89,12 +96,42 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
+  // Helper function to normalize date format
+  const normalizeDate = (date) => {
+    if (typeof date === 'string') {
+      return date;
+    }
+    if (date instanceof Date) {
+      // Use local date string to avoid timezone issues
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    return date;
+  };
+
+  // Helper function to create a date string in local timezone
+  const createLocalDateString = (date) => {
+    if (typeof date === 'string') {
+      return date;
+    }
+    if (date instanceof Date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    return date;
+  };
+
   // Get all blocked time slots for a specific date
   const getBlockedTimesForDate = (date) => {
     const blockedTimes = new Set();
+    const normalizedDate = normalizeDate(date);
     
     existingBookings
-      .filter(booking => booking.date === date)
+      .filter(booking => normalizeDate(booking.date) === normalizedDate)
       .forEach(booking => {
         const startTime = timeToMinutes(booking.time);
         const serviceDuration = SERVICE_DURATIONS[booking.service] || 3; // Default 3 hours
@@ -113,31 +150,81 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
   };
 
   // Get available times for selected date and service
-  const getAvailableTimes = (date, service) => {
+  const getAvailableTimes = async (date, service) => {
     if (!date) return AVAILABLE_TIMES;
     
-    const dateStr = date.toISOString().split('T')[0];
-    const blockedTimes = getBlockedTimesForDate(dateStr);
-    const availableTimes = AVAILABLE_TIMES.filter(time => !blockedTimes.includes(time));
+    const dateStr = createLocalDateString(date);
+    console.log('Processing date:', date, 'Normalized to:', dateStr); // Temporary debug
     
-    // If a service is selected, also check if there's enough time left in the day
-    if (service) {
-      let serviceDuration = SERVICE_DURATIONS[service];
-      // Add Iron Fallout time if selected
-      if (formData.ironFalloutAddon) {
-        serviceDuration += SERVICE_DURATIONS['Iron Fallout & Tar Remover'];
+    // Fetch fresh booking data for this specific date
+    try {
+      const bookingsRef = collection(db, 'bookings');
+      const q = query(bookingsRef, where('date', '==', dateStr));
+      const querySnapshot = await getDocs(q);
+      
+      const freshBookings = [];
+      querySnapshot.forEach((doc) => {
+        freshBookings.push({ id: doc.id, ...doc.data() });
+      });
+      
+      // Calculate blocked times from fresh data
+      const blockedTimes = new Set();
+      freshBookings.forEach(booking => {
+        const startTime = timeToMinutes(booking.time);
+        const serviceDuration = SERVICE_DURATIONS[booking.service] || 3;
+        const endTime = startTime + (serviceDuration * 60);
+        
+        for (let time = startTime; time < endTime; time += 60) {
+          const timeStr = minutesToTime(time);
+          if (AVAILABLE_TIMES.includes(timeStr)) {
+            blockedTimes.add(timeStr);
+          }
+        }
+      });
+      
+      const availableTimes = AVAILABLE_TIMES.filter(time => !blockedTimes.has(time));
+      
+      // If a service is selected, also check if there's enough time left in the day
+      if (service) {
+        let serviceDuration = SERVICE_DURATIONS[service];
+        // Add Iron Fallout time if selected
+        if (formData.ironFalloutAddon) {
+          serviceDuration += SERVICE_DURATIONS['Iron Fallout & Tar Remover'];
+        }
+        
+        return availableTimes.filter(time => {
+          const startTime = timeToMinutes(time);
+          const endTime = startTime + (serviceDuration * 60);
+          const lastPossibleTime = timeToMinutes('16:00') + 60; // 17:00
+          
+          return endTime <= lastPossibleTime;
+        });
       }
       
-      return availableTimes.filter(time => {
-        const startTime = timeToMinutes(time);
-        const endTime = startTime + (serviceDuration * 60);
-        const lastPossibleTime = timeToMinutes('16:00') + 60; // 17:00
+      return availableTimes;
+    } catch (error) {
+      console.error('Error fetching fresh booking data:', error);
+      // Fallback to local data if database fetch fails
+      const blockedTimes = getBlockedTimesForDate(dateStr);
+      const availableTimes = AVAILABLE_TIMES.filter(time => !blockedTimes.includes(time));
+      
+      if (service) {
+        let serviceDuration = SERVICE_DURATIONS[service];
+        if (formData.ironFalloutAddon) {
+          serviceDuration += SERVICE_DURATIONS['Iron Fallout & Tar Remover'];
+        }
         
-        return endTime <= lastPossibleTime;
-      });
+        return availableTimes.filter(time => {
+          const startTime = timeToMinutes(time);
+          const endTime = startTime + (serviceDuration * 60);
+          const lastPossibleTime = timeToMinutes('16:00') + 60;
+          
+          return endTime <= lastPossibleTime;
+        });
+      }
+      
+      return availableTimes;
     }
-    
-    return availableTimes;
   };
 
   // Check if a date has any available slots
@@ -146,9 +233,20 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
     return blockedTimes.length < AVAILABLE_TIMES.length;
   };
 
+  // Check if a date is a weekend (Saturday = 6, Sunday = 0)
+  const isWeekend = (date) => {
+    const dayOfWeek = date.getDay();
+    return dayOfWeek === 0 || dayOfWeek === 6; // Sunday or Saturday
+  };
+
   // More strict check for DatePicker filtering - check if there are enough slots for any service
   const isDateSelectable = (date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    // First check if it's a weekend
+    if (!isWeekend(date)) {
+      return false;
+    }
+    
+    const dateStr = createLocalDateString(date);
     const blockedTimes = getBlockedTimesForDate(dateStr);
     
     // Check if there are enough available slots for the shortest service (1.5 hours)
@@ -199,21 +297,45 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // Validate date input for weekend-only bookings
+    if (name === 'date') {
+      if (value) {
+        const selectedDate = new Date(value + 'T00:00:00'); // Add time to avoid timezone issues
+        if (!isWeekend(selectedDate)) {
+          setError('Bookings are only available on weekends (Saturday and Sunday). Please select a weekend date.');
+          setFormData(prev => ({ ...prev, [name]: null, time: '' }));
+          return;
+        }
+        // Convert string to Date object for consistency and clear time
+        setFormData(prev => ({ ...prev, [name]: selectedDate, time: '' }));
+        updateAvailableTimes(selectedDate, formData.service);
+      } else {
+        setFormData(prev => ({ ...prev, [name]: null, time: '' }));
+      }
+      if (error) setError('');
+      if (success) setSuccess('');
+      return;
+    }
+    
     setFormData(prev => ({ ...prev, [name]: value }));
     
-    // Clear time selection when date or service changes
-    if (name === 'date' || name === 'service') {
+    // Clear time selection when service changes
+    if (name === 'service') {
       setFormData(prev => ({ 
         ...prev, 
         time: '',
         // Clear Iron Fallout add-on if service doesn't support it
-        ironFalloutAddon: name === 'service' && value !== 'Exterior Only' && value !== 'Full Valet' ? false : prev.ironFalloutAddon
+        ironFalloutAddon: value !== 'Exterior Only' && value !== 'Full Valet' ? false : prev.ironFalloutAddon
       }));
+      
+      // Update available times when service changes
+      updateAvailableTimes(formData.date, value);
     }
     
     // Check time slot availability when time is selected
     if (name === 'time' && value && formData.date) {
-      const dateStr = formData.date.toISOString().split('T')[0];
+      const dateStr = createLocalDateString(formData.date);
       const blockedTimes = getBlockedTimesForDate(dateStr);
       
       if (blockedTimes.includes(value)) {
@@ -241,9 +363,34 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
   };
 
   const handleDateChange = (date) => {
+    // Validate that the selected date is a weekend
+    if (date && !isWeekend(date)) {
+      setError('Bookings are only available on weekends (Saturday and Sunday). Please select a weekend date.');
+      return;
+    }
+    
     setFormData(prev => ({ ...prev, date, time: '' }));
     if (error) setError('');
     if (success) setSuccess('');
+    updateAvailableTimes(date, formData.service);
+  };
+
+  const updateAvailableTimes = async (date, service) => {
+    if (!date) {
+      setCurrentAvailableTimes(AVAILABLE_TIMES);
+      return;
+    }
+    
+    setLoadingTimes(true);
+    try {
+      const times = await getAvailableTimes(date, service);
+      setCurrentAvailableTimes(times);
+    } catch (error) {
+      console.error('Error updating available times:', error);
+      setCurrentAvailableTimes([]);
+    } finally {
+      setLoadingTimes(false);
+    }
   };
 
   const handleBlur = (e) => {
@@ -256,6 +403,13 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
     setSuccess('');
     setError('');
     
+    // Validate that date is a weekend
+    if (formData.date && !isWeekend(formData.date)) {
+      setError('Bookings are only available on weekends (Saturday and Sunday). Please select a weekend date.');
+      setTouched(Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
+      return;
+    }
+    
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setTouched(Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
@@ -265,8 +419,9 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
 
     setLoading(true);
     try {
-      // Real-time check against database before booking
-      const dateStr = formData.date.toISOString().split('T')[0];
+      // Always fetch fresh booking data from database before validation
+      const dateStr = createLocalDateString(formData.date);
+      console.log('Booking for date:', formData.date, 'Normalized to:', dateStr); // Temporary debug
       
       // Fetch the latest bookings for this date from the database
       const bookingsRef = collection(db, 'bookings');
@@ -397,16 +552,7 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
       });
       setTouched({});
       
-      // Immediately update local state with the new booking
-      const newBooking = {
-        id: 'temp-' + Date.now(),
-        ...formData,
-        date: dateStr,
-        created: Timestamp.now(),
-      };
-      setExistingBookings(prev => [...prev, newBooking]);
-      
-      // Also refresh from database to ensure consistency
+      // Immediately refresh booking data to ensure consistency
       await fetchExistingBookings();
     } catch (err) {
       if (err.message.includes('time slot') || err.message.includes('conflicts')) {
@@ -419,6 +565,11 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
     }
   };
 
+  // Initialize available times on component mount
+  useEffect(() => {
+    setCurrentAvailableTimes(AVAILABLE_TIMES);
+  }, []);
+
   const getFieldError = (fieldName) => {
     if (touched[fieldName]) {
       const errors = validateForm();
@@ -426,8 +577,6 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
     }
     return '';
   };
-
-  const availableTimes = getAvailableTimes(formData.date, formData.service);
 
   if (isModal) {
     return (
@@ -437,6 +586,9 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
           <p className="text-light mb-0">
             Schedule your car valeting service at a time that suits you. We'll confirm your booking within 24 hours.
           </p>
+          <div className="alert alert-info mt-3 mb-0" role="alert">
+            <strong>📅 Weekend Bookings Only:</strong> Bookings are only available on <strong>Saturday and Sunday</strong> until further notice. Please select a weekend date to proceed.
+          </div>
         </div>
         
         {/* 1. Calendar Section - First */}
@@ -526,21 +678,22 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
             value={formData.time}
             onChange={handleChange}
             onBlur={handleBlur}
-            disabled={!formData.date || !formData.service || availableTimes.length === 0}
+            disabled={!formData.date || !formData.service || currentAvailableTimes.length === 0 || loadingTimes}
           >
             <option value="">
               {!formData.date ? 'Select a date first' : 
                !formData.service ? 'Select a service first' :
-               availableTimes.length === 0 ? 'No available times' : 'Select a time'}
+               loadingTimes ? 'Loading times...' :
+               currentAvailableTimes.length === 0 ? 'No available times' : 'Select a time'}
             </option>
-            {availableTimes.map(time => (
+            {currentAvailableTimes.map(time => (
               <option key={time} value={time}>{time}</option>
             ))}
           </select>
           {getFieldError('time') && (
             <div className="invalid-feedback">{getFieldError('time')}</div>
           )}
-          {formData.date && formData.service && availableTimes.length === 0 && (
+          {formData.date && formData.service && currentAvailableTimes.length === 0 && (
             <div className="form-text text-warning">
               No available times for {formData.service} on this date. Please select another date or service.
             </div>
@@ -642,7 +795,7 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
             <button
               type="submit"
               className="btn btn-primary w-100 fw-semibold py-3"
-              disabled={loading || !formData.date || !formData.service || availableTimes.length === 0}
+              disabled={loading || !formData.date || !formData.service || currentAvailableTimes.length === 0}
             >
               {loading ? (
                 <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -685,6 +838,9 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
             <p className="text-light mb-0">
               Schedule your car valeting service at a time that suits you. We'll confirm your booking within 24 hours.
             </p>
+            <div className="alert alert-info mt-3 mb-0" role="alert">
+              <strong>📅 Weekend Bookings Only:</strong> Bookings are only available on <strong>Saturday and Sunday</strong> as we are in college during the week. Please select a weekend date to proceed.
+            </div>
           </div>
           <form className="row g-3" onSubmit={handleSubmit}>
             <div className="col-12 col-md-6">
@@ -824,14 +980,14 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
                 value={formData.time}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                disabled={!formData.date || !formData.service || availableTimes.length === 0}
+                disabled={!formData.date || !formData.service || currentAvailableTimes.length === 0}
               >
                 <option value="">
                   {!formData.date ? 'Select a date first' : 
                    !formData.service ? 'Select a service first' :
-                   availableTimes.length === 0 ? 'No available times' : 'Select a time'}
+                   currentAvailableTimes.length === 0 ? 'No available times' : 'Select a time'}
                 </option>
-                {availableTimes.map(time => (
+                {currentAvailableTimes.map(time => (
                   <option key={time} value={time}>{time}</option>
                 ))}
               </select>
@@ -855,7 +1011,7 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
               <button
                 type="submit"
                 className="btn btn-primary w-100 fw-semibold py-3"
-                disabled={loading || !formData.date || !formData.service || availableTimes.length === 0}
+                disabled={loading || !formData.date || !formData.service || currentAvailableTimes.length === 0}
               >
                 {loading ? (
                   <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>

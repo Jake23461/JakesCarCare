@@ -40,6 +40,7 @@ export default function Admin() {
   // Enhanced gallery management states
   const [editingItem, setEditingItem] = useState(null);
   const [editingBookingPrice, setEditingBookingPrice] = useState(null);
+  const [editingBookingDate, setEditingBookingDate] = useState(null);
 
   const SERVICES = ['Full Valet', 'Exterior Only', 'Interior Only'];
   const AVAILABLE_TIMES = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
@@ -112,8 +113,115 @@ export default function Admin() {
     }
   };
 
+  // Service duration in hours (including travel time) - same as Contact component
+  const SERVICE_DURATIONS = {
+    'Full Valet': 4,       // 3-4 hours service + 1 hour travel
+    'Exterior Only': 2,    // 1-2 hours service + 1 hour travel
+    'Interior Only': 3,    // 2-3 hours service + 1 hour travel
+    'Iron Fallout & Tar Remover': 1.5 // 30 min service + 1 hour travel
+  };
+
+  // Convert time string to minutes for easier calculations
+  const timeToMinutes = (timeStr) => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  // Convert minutes back to time string
+  const minutesToTime = (minutes) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  };
+
+  // Helper function to normalize date format (same as Contact component)
+  const normalizeDate = (date) => {
+    if (typeof date === 'string') {
+      return date;
+    }
+    if (date instanceof Date) {
+      // Use local date string to avoid timezone issues
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    return date;
+  };
+
+  // Check for booking overlaps
+  const checkBookingOverlap = (date, time, service, ironFalloutAddon = false) => {
+    const startTime = timeToMinutes(time);
+    let serviceDuration = SERVICE_DURATIONS[service] || 3;
+    if (ironFalloutAddon) {
+      serviceDuration += SERVICE_DURATIONS['Iron Fallout & Tar Remover'];
+    }
+    const endTime = startTime + (serviceDuration * 60);
+
+    // Check against existing bookings for the same date
+    const normalizedDate = normalizeDate(date);
+    const existingBookingsForDate = bookings.filter(booking => normalizeDate(booking.date) === normalizedDate);
+    
+    for (const booking of existingBookingsForDate) {
+      const existingStartTime = timeToMinutes(booking.time);
+      let existingServiceDuration = SERVICE_DURATIONS[booking.service] || 3;
+      if (booking.ironFalloutAddon) {
+        existingServiceDuration += SERVICE_DURATIONS['Iron Fallout & Tar Remover'];
+      }
+      const existingEndTime = existingStartTime + (existingServiceDuration * 60);
+
+      // Check if the new booking overlaps with existing booking
+      if (startTime < existingEndTime && endTime > existingStartTime) {
+        return true; // Overlap detected
+      }
+    }
+    return false; // No overlap
+  };
+
+  // Get conflicting bookings for a specific date and time
+  const getConflictingBookings = (date, time, service, ironFalloutAddon = false) => {
+    const startTime = timeToMinutes(time);
+    let serviceDuration = SERVICE_DURATIONS[service] || 3;
+    if (ironFalloutAddon) {
+      serviceDuration += SERVICE_DURATIONS['Iron Fallout & Tar Remover'];
+    }
+    const endTime = startTime + (serviceDuration * 60);
+
+    const normalizedDate = normalizeDate(date);
+    const existingBookingsForDate = bookings.filter(booking => normalizeDate(booking.date) === normalizedDate);
+    
+    const conflicts = [];
+    for (const booking of existingBookingsForDate) {
+      const existingStartTime = timeToMinutes(booking.time);
+      let existingServiceDuration = SERVICE_DURATIONS[booking.service] || 3;
+      if (booking.ironFalloutAddon) {
+        existingServiceDuration += SERVICE_DURATIONS['Iron Fallout & Tar Remover'];
+      }
+      const existingEndTime = existingStartTime + (existingServiceDuration * 60);
+
+      // Check if the new booking overlaps with existing booking
+      if (startTime < existingEndTime && endTime > existingStartTime) {
+        conflicts.push(booking);
+      }
+    }
+    return conflicts;
+  };
+
   const handleCreateBooking = async (e) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!newBooking.name || !newBooking.phone || !newBooking.service || !newBooking.date || !newBooking.time) {
+      alert('Please fill in all required fields (Name, Phone, Service, Date, Time).');
+      return;
+    }
+    
+    // Check for booking overlaps
+    if (checkBookingOverlap(newBooking.date, newBooking.time, newBooking.service, newBooking.ironFalloutAddon)) {
+      alert('This booking conflicts with an existing booking. Please choose a different time or date.');
+      return;
+    }
+
     try {
       await addDoc(collection(db, 'bookings'), {
         ...newBooking,
@@ -133,8 +241,10 @@ export default function Admin() {
       });
       setShowCreateForm(false);
       fetchBookings();
+      alert('Booking created successfully!');
     } catch (err) {
       console.error('Error creating booking:', err);
+      alert('Error creating booking. Please try again.');
     }
   };
 
@@ -202,6 +312,30 @@ export default function Admin() {
     let price = prices[service] || 0;
     if (ironFalloutAddon) price += 20;
     return price;
+  };
+
+  const getTotalEarnings = () => {
+    return bookings.reduce((sum, b) => {
+      let price = 0;
+      if (b.customPrice !== null && b.customPrice !== undefined && !isNaN(b.customPrice)) {
+        price = b.customPrice;
+      } else if (b.service) {
+        price = getServicePriceValue(b.service, b.ironFalloutAddon);
+      }
+      return sum + (price || 0);
+    }, 0);
+  };
+
+  const getActualTotalEarned = () => {
+    return bookings.filter(b => b.completed).reduce((sum, b) => {
+      let price = 0;
+      if (b.customPrice !== null && b.customPrice !== undefined && !isNaN(b.customPrice)) {
+        price = b.customPrice;
+      } else if (b.service) {
+        price = getServicePriceValue(b.service, b.ironFalloutAddon);
+      }
+      return sum + (price || 0);
+    }, 0);
   };
 
   const renderStars = (rating) => {
@@ -274,20 +408,6 @@ export default function Admin() {
     
     console.log('Generated weeks:', weeks);
     return weeks;
-  };
-
-  const getTotalEarnings = () => {
-    return bookings.reduce((sum, b) => {
-      const price = b.customPrice !== null ? b.customPrice : getServicePriceValue(b.service, b.ironFalloutAddon);
-      return sum + price;
-    }, 0);
-  };
-
-  const getActualTotalEarned = () => {
-    return bookings.filter(b => b.completed).reduce((sum, b) => {
-      const price = b.customPrice !== null ? b.customPrice : getServicePriceValue(b.service, b.ironFalloutAddon);
-      return sum + price;
-    }, 0);
   };
 
   const handleToggleCompleted = async (booking) => {
@@ -585,6 +705,58 @@ export default function Admin() {
     setEditingBookingPrice(null);
   };
 
+  const startEditingBookingDate = (booking) => {
+    setEditingBookingDate({
+      id: booking.id,
+      date: booking.date,
+      time: booking.time,
+      service: booking.service,
+      ironFalloutAddon: booking.ironFalloutAddon
+    });
+  };
+
+  const saveBookingDate = async () => {
+    if (!editingBookingDate) return;
+
+    try {
+      // Check for overlaps with the new date/time
+      const conflicts = getConflictingBookings(
+        editingBookingDate.date, 
+        editingBookingDate.time, 
+        editingBookingDate.service, 
+        editingBookingDate.ironFalloutAddon
+      ).filter(b => b.id !== editingBookingDate.id); // Exclude the current booking
+
+      if (conflicts.length > 0) {
+        alert('This date/time conflicts with existing bookings. Please choose a different date or time.');
+        return;
+      }
+
+      await updateDoc(doc(db, 'bookings', editingBookingDate.id), { 
+        date: editingBookingDate.date 
+      });
+      
+      setBookings(prev => prev.map(b => 
+        b.id === editingBookingDate.id 
+          ? { ...b, date: editingBookingDate.date }
+          : b
+      ));
+      
+      setEditingBookingDate(null);
+      alert('Booking date updated successfully!');
+      
+      // Refresh booking data to ensure all components are updated
+      await fetchBookings();
+    } catch (err) {
+      console.error('Error updating booking date:', err);
+      alert('Error updating booking date. Please try again.');
+    }
+  };
+
+  const cancelBookingDateEdit = () => {
+    setEditingBookingDate(null);
+  };
+
   const deleteBooking = async (bookingId) => {
     if (window.confirm('Are you sure you want to delete this booking?')) {
       try {
@@ -719,6 +891,9 @@ export default function Admin() {
                                         />
                                         <strong>{b.name}</strong>
                                         <span className="badge bg-secondary ms-1">{b.service}</span>
+                                        {b.adminCreated && (
+                                          <span className="badge bg-info ms-1" title="Created by admin">A</span>
+                                        )}
                                       </div>
                                       <div className="small">
                                         {b.time} | 
@@ -829,6 +1004,28 @@ export default function Admin() {
                         ))}
                       </select>
                     </div>
+                    
+                    {/* Conflict Warning */}
+                    {newBooking.date && newBooking.time && newBooking.service && (
+                      (() => {
+                        const conflicts = getConflictingBookings(newBooking.date, newBooking.time, newBooking.service, newBooking.ironFalloutAddon);
+                        return conflicts.length > 0 ? (
+                          <div className="col-12">
+                            <div className="alert alert-warning" role="alert">
+                              <strong>⚠️ Booking Conflict Detected!</strong><br />
+                              This booking conflicts with the following existing bookings:
+                              <ul className="mb-0 mt-2">
+                                {conflicts.map((conflict, index) => (
+                                  <li key={index}>
+                                    {conflict.name} - {conflict.time} ({conflict.service})
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        ) : null;
+                      })()
+                    )}
                     {(newBooking.service === 'Exterior Only' || newBooking.service === 'Full Valet') && (
                       <div className="col-12">
                         <div className="form-check">
@@ -887,7 +1084,56 @@ export default function Admin() {
                       <tbody>
                         {bookings.map((booking) => (
                           <tr key={booking.id}>
-                            <td>{formatDate(booking.date)}</td>
+                            <td>
+                              {editingBookingDate?.id === booking.id ? (
+                                <div className="d-flex align-items-center gap-2">
+                                  <input
+                                    type="date"
+                                    className="form-control form-control-sm"
+                                    style={{ width: '120px' }}
+                                    value={editingBookingDate.date}
+                                    onChange={(e) => setEditingBookingDate({...editingBookingDate, date: e.target.value})}
+                                  />
+                                  <select
+                                    className="form-select form-select-sm"
+                                    style={{ width: '120px' }}
+                                    value={editingBookingDate.time}
+                                    onChange={(e) => setEditingBookingDate({...editingBookingDate, time: e.target.value})}
+                                  >
+                                    <option value="">Select a time</option>
+                                    {AVAILABLE_TIMES.map(time => (
+                                      <option key={time} value={time}>{time}</option>
+                                    ))}
+                                  </select>
+                                  <button
+                                    className="btn btn-success btn-sm"
+                                    onClick={saveBookingDate}
+                                    style={{ fontSize: '0.75rem', padding: '2px 6px' }}
+                                  >
+                                    ✓
+                                  </button>
+                                  <button
+                                    className="btn btn-secondary btn-sm"
+                                    onClick={cancelBookingDateEdit}
+                                    style={{ fontSize: '0.75rem', padding: '2px 6px' }}
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="d-flex align-items-center gap-2">
+                                  <span>{formatDate(booking.date)}</span>
+                                  <button
+                                    className="btn btn-outline-primary btn-sm"
+                                    onClick={() => startEditingBookingDate(booking)}
+                                    style={{ fontSize: '0.75rem', padding: '2px 6px' }}
+                                    title="Edit date/time"
+                                  >
+                                    ✏️
+                                  </button>
+                                </div>
+                              )}
+                            </td>
                             <td>{booking.time}</td>
                             <td>{booking.name}</td>
                             <td>{booking.phone}</td>
