@@ -20,7 +20,8 @@ export default function Admin() {
     date: '',
     time: '',
     message: '',
-    ironFalloutAddon: false
+    ironFalloutAddon: false,
+    protectorWaxAddon: false
   });
   const [showBookingCalendar, setShowBookingCalendar] = useState(false);
   const [updatingBooking, setUpdatingBooking] = useState(null);
@@ -122,6 +123,7 @@ export default function Admin() {
     'Full Valet': 4,       // 3-4 hours service + 1 hour travel
     'Exterior Only': 2,    // 1-2 hours service + 1 hour travel
     'Interior Only': 3,    // 2-3 hours service + 1 hour travel
+    'Protector Wax': 2.5,  // 1.5-2 hours service + 1 hour travel
     'Iron Fallout & Tar Remover': 1.5 // 30 min service + 1 hour travel
   };
 
@@ -154,12 +156,10 @@ export default function Admin() {
   };
 
   // Check for booking overlaps
-  const checkBookingOverlap = (date, time, service, ironFalloutAddon = false) => {
+  const checkBookingOverlap = (date, time, service, ironFalloutAddon = false, protectorWaxAddon = false) => {
     const startTime = timeToMinutes(time);
     let serviceDuration = SERVICE_DURATIONS[service] || 3;
-    if (ironFalloutAddon) {
-      serviceDuration += SERVICE_DURATIONS['Iron Fallout & Tar Remover'];
-    }
+    // Add-ons don't extend booking time
     const endTime = startTime + (serviceDuration * 60);
 
     // Check against existing bookings for the same date
@@ -172,6 +172,9 @@ export default function Admin() {
       if (booking.ironFalloutAddon) {
         existingServiceDuration += SERVICE_DURATIONS['Iron Fallout & Tar Remover'];
       }
+      if (booking.protectorWaxAddon) {
+        existingServiceDuration += SERVICE_DURATIONS['Protector Wax'];
+      }
       const existingEndTime = existingStartTime + (existingServiceDuration * 60);
 
       // Check if the new booking overlaps with existing booking
@@ -183,12 +186,10 @@ export default function Admin() {
   };
 
   // Get conflicting bookings for a specific date and time
-  const getConflictingBookings = (date, time, service, ironFalloutAddon = false) => {
+  const getConflictingBookings = (date, time, service, ironFalloutAddon = false, protectorWaxAddon = false) => {
     const startTime = timeToMinutes(time);
     let serviceDuration = SERVICE_DURATIONS[service] || 3;
-    if (ironFalloutAddon) {
-      serviceDuration += SERVICE_DURATIONS['Iron Fallout & Tar Remover'];
-    }
+    // Add-ons don't extend booking time
     const endTime = startTime + (serviceDuration * 60);
 
     const normalizedDate = normalizeDate(date);
@@ -198,9 +199,7 @@ export default function Admin() {
     for (const booking of existingBookingsForDate) {
       const existingStartTime = timeToMinutes(booking.time);
       let existingServiceDuration = SERVICE_DURATIONS[booking.service] || 3;
-      if (booking.ironFalloutAddon) {
-        existingServiceDuration += SERVICE_DURATIONS['Iron Fallout & Tar Remover'];
-      }
+      // Add-ons don't extend booking time
       const existingEndTime = existingStartTime + (existingServiceDuration * 60);
 
       // Check if the new booking overlaps with existing booking
@@ -221,7 +220,7 @@ export default function Admin() {
     }
     
     // Check for booking overlaps
-    if (checkBookingOverlap(newBooking.date, newBooking.time, newBooking.service, newBooking.ironFalloutAddon)) {
+    if (checkBookingOverlap(newBooking.date, newBooking.time, newBooking.service, newBooking.ironFalloutAddon, newBooking.protectorWaxAddon)) {
       alert('This booking conflicts with an existing booking. Please choose a different time or date.');
       return;
     }
@@ -241,7 +240,8 @@ export default function Admin() {
         date: '',
         time: '',
         message: '',
-        ironFalloutAddon: false
+        ironFalloutAddon: false,
+        protectorWaxAddon: false
       });
       setShowCreateForm(false);
       fetchBookings();
@@ -291,7 +291,7 @@ export default function Admin() {
     return date.toLocaleDateString('en-GB');
   };
 
-  const getServicePrice = (service, ironFalloutAddon, customPrice = null) => {
+  const getServicePrice = (service, ironFalloutAddon, customPrice = null, protectorWaxAddon = false) => {
     if (customPrice !== null) {
       return `€${customPrice}`;
     }
@@ -304,10 +304,13 @@ export default function Admin() {
     if (ironFalloutAddon) {
       price += ' + €20';
     }
+    if (protectorWaxAddon) {
+      price += ' + €25';
+    }
     return price;
   };
 
-  const getServicePriceValue = (service, ironFalloutAddon) => {
+  const getServicePriceValue = (service, ironFalloutAddon, protectorWaxAddon = false) => {
     const prices = {
       'Full Valet': 95,
       'Exterior Only': 40,
@@ -315,6 +318,7 @@ export default function Admin() {
     };
     let price = prices[service] || 0;
     if (ironFalloutAddon) price += 20;
+    if (protectorWaxAddon) price += 25;
     return price;
   };
 
@@ -324,7 +328,7 @@ export default function Admin() {
       if (b.customPrice !== null && b.customPrice !== undefined && !isNaN(b.customPrice)) {
         price = b.customPrice;
       } else if (b.service) {
-        price = getServicePriceValue(b.service, b.ironFalloutAddon);
+        price = getServicePriceValue(b.service, b.ironFalloutAddon, b.protectorWaxAddon);
       }
       return sum + (price || 0);
     }, 0);
@@ -336,7 +340,7 @@ export default function Admin() {
       if (b.customPrice !== null && b.customPrice !== undefined && !isNaN(b.customPrice)) {
         price = b.customPrice;
       } else if (b.service) {
-        price = getServicePriceValue(b.service, b.ironFalloutAddon);
+        price = getServicePriceValue(b.service, b.ironFalloutAddon, b.protectorWaxAddon);
       }
       return sum + (price || 0);
     }, 0);
@@ -947,7 +951,7 @@ export default function Admin() {
                             .filter(d => d.date !== null)
                             .flatMap(d => d.bookings)
                             .reduce((sum, b) => {
-                              const price = b.customPrice !== null ? b.customPrice : getServicePriceValue(b.service, b.ironFalloutAddon);
+                              const price = b.customPrice !== null ? b.customPrice : getServicePriceValue(b.service, b.ironFalloutAddon, b.protectorWaxAddon);
                               return sum + price;
                             }, 0);
                           
@@ -980,9 +984,10 @@ export default function Admin() {
                                               <div className="text-muted" style={{fontSize: '0.75rem'}}>
                                                 {b.time} • {b.service}
                                                 {b.ironFalloutAddon && <span className="text-warning"> +IF</span>}
+                                                {b.protectorWaxAddon && <span className="text-info"> +PW</span>}
                                               </div>
                                               <div className={b.customPrice !== null ? 'text-warning fw-bold' : 'text-success'} style={{fontSize: '0.75rem'}}>
-                                                €{b.customPrice !== null ? b.customPrice : getServicePriceValue(b.service, b.ironFalloutAddon)}
+                                                €{b.customPrice !== null ? b.customPrice : getServicePriceValue(b.service, b.ironFalloutAddon, b.protectorWaxAddon)}
                                               </div>
                                             </div>
                                           ))}
@@ -1096,7 +1101,7 @@ export default function Admin() {
                     {/* Conflict Warning */}
                     {newBooking.date && newBooking.time && newBooking.service && (
                       (() => {
-                        const conflicts = getConflictingBookings(newBooking.date, newBooking.time, newBooking.service, newBooking.ironFalloutAddon);
+                        const conflicts = getConflictingBookings(newBooking.date, newBooking.time, newBooking.service, newBooking.ironFalloutAddon, newBooking.protectorWaxAddon);
                         return conflicts.length > 0 ? (
                           <div className="col-12">
                             <div className="alert alert-warning" role="alert">
@@ -1128,6 +1133,23 @@ export default function Admin() {
                             Iron Fallout & Tar Remover (+€20)
                           </label>
                         </div>
+                        <div className="form-check mt-2">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="protectorWaxAddonAdmin"
+                            checked={newBooking.protectorWaxAddon}
+                            onChange={(e) => setNewBooking({...newBooking, protectorWaxAddon: e.target.checked})}
+                          />
+                          <label className="form-check-label text-light" htmlFor="protectorWaxAddonAdmin">
+                            Protector Wax (+€25)
+                          </label>
+                        </div>
+                        {newBooking.protectorWaxAddon && !newBooking.ironFalloutAddon && (
+                          <div className="alert alert-info mt-2 mb-0 small" role="alert">
+                            <strong>Tip:</strong> Iron Fallout is recommended before Protector Wax.
+                          </div>
+                        )}
                       </div>
                     )}
                     <div className="col-12">
@@ -1231,6 +1253,9 @@ export default function Admin() {
                               {booking.ironFalloutAddon && (
                                 <span className="badge bg-warning text-dark ms-1">+ Iron Fallout</span>
                               )}
+                              {booking.protectorWaxAddon && (
+                                <span className="badge bg-info text-dark ms-1">+ Protector Wax</span>
+                              )}
                             </td>
                             <td>
                               {editingBookingPrice?.id === booking.id ? (
@@ -1265,7 +1290,7 @@ export default function Admin() {
                               ) : (
                                 <div className="d-flex align-items-center gap-2">
                                   <span className={booking.customPrice ? 'text-warning fw-bold' : ''}>
-                                    {getServicePrice(booking.service, booking.ironFalloutAddon, booking.customPrice)}
+                                    {getServicePrice(booking.service, booking.ironFalloutAddon, booking.customPrice, booking.protectorWaxAddon)}
                                   </span>
                                   <button
                                     className="btn btn-outline-primary btn-sm"
