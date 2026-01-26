@@ -3,7 +3,7 @@ import { db } from '../firebase';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
 
-const GOOGLE_REVIEWS_URL = 'https://www.google.com/search?sa=X&sca_esv=292c8ab72c42bfbf&rlz=1C1GCEA_enIE1198IE1198&sxsrf=ANbL-n6aKhzLEXLu18okMgI36NQ_mT01JA:1769434197775&q=Jakes+Car+Care+Reviews&rflfq=1&num=20&stick=H4sIAAAAAAAAAONgkxI2MTE1MDQ3M7K0tDAxNbGwNDAz2cDI-IpRzCsxO7VYwTmxCIRTFYJSyzJTy4sXseKQAABrO_EjTAAAAA&rldimm=4450176299845489064&tbm=lcl&hl=en-IE&ved=2ahUKEwjUir-GqKmSAxWMQEEAHSBGIcoQ9fQKegQIURAG&cshid=1769434283689302&biw=1536&bih=826&dpr=1.25&aic=0#lkt=LocalPoiReviews';
+const GOOGLE_REVIEWS_URL = 'https://g.page/r/CagRJ0TEM8I9EBE/review';
 
 export default function Testimonials({ onLeaveReview }) {
   const [reviews, setReviews] = useState([]);
