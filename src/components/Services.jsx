@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 
+const GOOGLE_REVIEWS_URL = 'https://www.google.com/maps/place/Jakes+Car+Care/@53.8028218,-8.6256595,9z/data=!4m10!1m2!2m1!1sjakes+car+care!3m6!1s0x485c29e5619693d3:0x3dc233c4442711a8!8m2!3d53.8028218!4d-8.0653568!15sCg5qYWtlcyBjYXIgY2FyZZIBCGNhcl93YXNo4AEA!16s%2Fg%2F11xm6ytsvd?entry=ttu&g_ep=EgoyMDI2MDEyMS4wIKXMDSoASAFQAw%3D%3D';
+
 const services = [
   {
     title: 'Full Valet',

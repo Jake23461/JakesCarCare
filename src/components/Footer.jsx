@@ -38,8 +38,11 @@ export default function Footer() {
           </div>
         </div>
         <div className="d-flex gap-3 justify-content-center">
-          <a href="https://www.facebook.com/YOUR_FACEBOOK_PAGE" target="_blank" rel="noopener noreferrer" className="text-white-50 footer-social" aria-label="Facebook">
+          <a href="https://www.facebook.com/profile.php?id=61560837419584" target="_blank" rel="noopener noreferrer" className="text-white-50 footer-social" aria-label="Facebook">
             <i className="bi bi-facebook fs-5"></i>
+          </a>
+          <a href="https://www.tiktok.com/@jakescarcare4" target="_blank" rel="noopener noreferrer" className="text-white-50 footer-social" aria-label="TikTok">
+            <i className="bi bi-tiktok fs-5"></i>
           </a>
           <a href="#" className="text-white-50 footer-social" aria-label="Instagram">
             <i className="bi bi-instagram fs-5"></i>

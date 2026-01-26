@@ -3,6 +3,8 @@ import { db } from '../firebase';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
 
+const GOOGLE_REVIEWS_URL = 'https://www.google.com/maps/place/Jakes+Car+Care/@53.9126731,-8.585352,8.5z/data=!4m12!1m2!2m1!1sjakes+car+care!3m8!1s0x485c29e5619693d3:0x3dc233c4442711a8!8m2!3d53.8028218!4d-8.0653568!9m1!1b1!15sCg5qYWtlcyBjYXIgY2FyZZIBCGNhcl93YXNo4AEA!16s%2Fg%2F11xm6ytsvd?entry=ttu&g_ep=EgoyMDI2MDEyMS4wIKXMDSoASAFQAw%3D%3D';
+
 export default function Testimonials({ onLeaveReview }) {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -123,7 +125,14 @@ export default function Testimonials({ onLeaveReview }) {
           <h2 className="display-6 fw-bold text-primary text-center mb-4">What Our Customers Say</h2>
           <div className="text-center">
             <p className="text-light mb-4">Be the first to leave a review!</p>
-            <button className="btn btn-primary" onClick={onLeaveReview}>Leave a Review</button>
+            <a 
+              href={GOOGLE_REVIEWS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary"
+            >
+              ⭐ Leave a Review on Google
+            </a>
           </div>
         </div>
       </section>
@@ -185,7 +194,14 @@ export default function Testimonials({ onLeaveReview }) {
         {/* Review CTA */}
         <div className="text-center mt-5">
           <p className="text-light mb-3">Had a great experience? Share it with others!</p>
-          <button className="btn btn-outline-primary" onClick={onLeaveReview}>Leave a Review</button>
+          <a 
+            href={GOOGLE_REVIEWS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-outline-primary"
+          >
+            ⭐ Leave a Review on Google
+          </a>
         </div>
       </div>
     </section>
