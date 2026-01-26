@@ -91,9 +91,7 @@ export default function Header({ onLeaveReview }) {
             <li className="nav-item">
               <Link className="nav-link" to="/blog">Blog</Link>
             </li>
-            <li className="nav-item">
-              <a className="nav-link" href="#reviews" onClick={e => { e.preventDefault(); onLeaveReview(); }}>Reviews</a>
-            </li>
+           
           </ul>
         </div>
       </div>
