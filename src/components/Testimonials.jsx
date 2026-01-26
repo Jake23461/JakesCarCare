@@ -3,7 +3,7 @@ import { db } from '../firebase';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
 
-const GOOGLE_REVIEWS_URL = 'https://www.google.com/search?sca_esv=292c8ab72c42bfbf&rlz=1C1GCEA_enIE1198IE1198&sxsrf=ANbL-n7l6BGYGdoqB2Ejg-UNd6qGsppZeg:1769433943491&si=AL3DRZEsmMGCryMMFSHJ3StBhOdZ2-6yYkXd_doETEE1OR-qOcL2hPhyDCj2WatxjR07w9UyZAFf-44-1p-BScN3hw1AEBij0rBrTO3oEmena5yBWvQizPx4jrkS0yAfl4abeZMJZN84&q=Jakes+Car+Care+Reviews&sa=X&ved=2ahUKEwiB4p6Np6mSAxWjUUEAHZXHKOMQ0bkNegQIIBAH&biw=1536&bih=826&dpr=1.25&aic=0https://www.google.com/maps/place/Jakes+Car+Care/@53.9126731,-8.585352,8.5z/data=!4m12!1m2!2m1!1sjakes+car+care!3m8!1s0x485c29e5619693d3:0x3dc233c4442711a8!8m2!3d53.8028218!4d-8.0653568!9m1!1b1!15sCg5qYWtlcyBjYXIgY2FyZZIBCGNhcl93YXNo4AEA!16s%2Fg%2F11xm6ytsvd?entry=ttu&g_ep=EgoyMDI2MDEyMS4wIKXMDSoASAFQAw%3D%3D';
+const GOOGLE_REVIEWS_URL = 'https://www.google.com/search?sa=X&sca_esv=292c8ab72c42bfbf&rlz=1C1GCEA_enIE1198IE1198&sxsrf=ANbL-n6aKhzLEXLu18okMgI36NQ_mT01JA:1769434197775&q=Jakes+Car+Care+Reviews&rflfq=1&num=20&stick=H4sIAAAAAAAAAONgkxI2MTE1MDQ3M7K0tDAxNbGwNDAz2cDI-IpRzCsxO7VYwTmxCIRTFYJSyzJTy4sXseKQAABrO_EjTAAAAA&rldimm=4450176299845489064&tbm=lcl&hl=en-IE&ved=2ahUKEwjUir-GqKmSAxWMQEEAHSBGIcoQ9fQKegQIURAG&cshid=1769434283689302&biw=1536&bih=826&dpr=1.25&aic=0#lkt=LocalPoiReviews';
 
 export default function Testimonials({ onLeaveReview }) {
   const [reviews, setReviews] = useState([]);
