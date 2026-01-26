@@ -20,7 +20,8 @@ export default function Admin() {
     date: '',
     time: '',
     message: '',
-    ironFalloutAddon: false
+    ironFalloutAddon: false,
+    protectorWaxAddon: false
   });
   const [showBookingCalendar, setShowBookingCalendar] = useState(false);
   const [updatingBooking, setUpdatingBooking] = useState(null);
@@ -41,9 +42,13 @@ export default function Admin() {
   const [editingItem, setEditingItem] = useState(null);
   const [editingBookingPrice, setEditingBookingPrice] = useState(null);
   const [editingBookingDate, setEditingBookingDate] = useState(null);
+  const [currentCalendarMonth, setCurrentCalendarMonth] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
 
   const SERVICES = ['Full Valet', 'Exterior Only', 'Interior Only'];
-  const AVAILABLE_TIMES = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
+  const AVAILABLE_TIMES = ['09:00', '13:00'];
 
   // State for confirmation modal
   const [confirmModal, setConfirmModal] = useState({
@@ -118,6 +123,7 @@ export default function Admin() {
     'Full Valet': 4,       // 3-4 hours service + 1 hour travel
     'Exterior Only': 2,    // 1-2 hours service + 1 hour travel
     'Interior Only': 3,    // 2-3 hours service + 1 hour travel
+    'Protector Wax': 2.5,  // 1.5-2 hours service + 1 hour travel
     'Iron Fallout & Tar Remover': 1.5 // 30 min service + 1 hour travel
   };
 
@@ -150,12 +156,10 @@ export default function Admin() {
   };
 
   // Check for booking overlaps
-  const checkBookingOverlap = (date, time, service, ironFalloutAddon = false) => {
+  const checkBookingOverlap = (date, time, service, ironFalloutAddon = false, protectorWaxAddon = false) => {
     const startTime = timeToMinutes(time);
     let serviceDuration = SERVICE_DURATIONS[service] || 3;
-    if (ironFalloutAddon) {
-      serviceDuration += SERVICE_DURATIONS['Iron Fallout & Tar Remover'];
-    }
+    // Add-ons don't extend booking time
     const endTime = startTime + (serviceDuration * 60);
 
     // Check against existing bookings for the same date
@@ -168,6 +172,9 @@ export default function Admin() {
       if (booking.ironFalloutAddon) {
         existingServiceDuration += SERVICE_DURATIONS['Iron Fallout & Tar Remover'];
       }
+      if (booking.protectorWaxAddon) {
+        existingServiceDuration += SERVICE_DURATIONS['Protector Wax'];
+      }
       const existingEndTime = existingStartTime + (existingServiceDuration * 60);
 
       // Check if the new booking overlaps with existing booking
@@ -179,12 +186,10 @@ export default function Admin() {
   };
 
   // Get conflicting bookings for a specific date and time
-  const getConflictingBookings = (date, time, service, ironFalloutAddon = false) => {
+  const getConflictingBookings = (date, time, service, ironFalloutAddon = false, protectorWaxAddon = false) => {
     const startTime = timeToMinutes(time);
     let serviceDuration = SERVICE_DURATIONS[service] || 3;
-    if (ironFalloutAddon) {
-      serviceDuration += SERVICE_DURATIONS['Iron Fallout & Tar Remover'];
-    }
+    // Add-ons don't extend booking time
     const endTime = startTime + (serviceDuration * 60);
 
     const normalizedDate = normalizeDate(date);
@@ -194,9 +199,7 @@ export default function Admin() {
     for (const booking of existingBookingsForDate) {
       const existingStartTime = timeToMinutes(booking.time);
       let existingServiceDuration = SERVICE_DURATIONS[booking.service] || 3;
-      if (booking.ironFalloutAddon) {
-        existingServiceDuration += SERVICE_DURATIONS['Iron Fallout & Tar Remover'];
-      }
+      // Add-ons don't extend booking time
       const existingEndTime = existingStartTime + (existingServiceDuration * 60);
 
       // Check if the new booking overlaps with existing booking
@@ -217,7 +220,7 @@ export default function Admin() {
     }
     
     // Check for booking overlaps
-    if (checkBookingOverlap(newBooking.date, newBooking.time, newBooking.service, newBooking.ironFalloutAddon)) {
+    if (checkBookingOverlap(newBooking.date, newBooking.time, newBooking.service, newBooking.ironFalloutAddon, newBooking.protectorWaxAddon)) {
       alert('This booking conflicts with an existing booking. Please choose a different time or date.');
       return;
     }
@@ -237,7 +240,8 @@ export default function Admin() {
         date: '',
         time: '',
         message: '',
-        ironFalloutAddon: false
+        ironFalloutAddon: false,
+        protectorWaxAddon: false
       });
       setShowCreateForm(false);
       fetchBookings();
@@ -287,7 +291,7 @@ export default function Admin() {
     return date.toLocaleDateString('en-GB');
   };
 
-  const getServicePrice = (service, ironFalloutAddon, customPrice = null) => {
+  const getServicePrice = (service, ironFalloutAddon, customPrice = null, protectorWaxAddon = false) => {
     if (customPrice !== null) {
       return `€${customPrice}`;
     }
@@ -300,10 +304,13 @@ export default function Admin() {
     if (ironFalloutAddon) {
       price += ' + €20';
     }
+    if (protectorWaxAddon) {
+      price += ' + €25';
+    }
     return price;
   };
 
-  const getServicePriceValue = (service, ironFalloutAddon) => {
+  const getServicePriceValue = (service, ironFalloutAddon, protectorWaxAddon = false) => {
     const prices = {
       'Full Valet': 95,
       'Exterior Only': 40,
@@ -311,6 +318,7 @@ export default function Admin() {
     };
     let price = prices[service] || 0;
     if (ironFalloutAddon) price += 20;
+    if (protectorWaxAddon) price += 25;
     return price;
   };
 
@@ -320,7 +328,7 @@ export default function Admin() {
       if (b.customPrice !== null && b.customPrice !== undefined && !isNaN(b.customPrice)) {
         price = b.customPrice;
       } else if (b.service) {
-        price = getServicePriceValue(b.service, b.ironFalloutAddon);
+        price = getServicePriceValue(b.service, b.ironFalloutAddon, b.protectorWaxAddon);
       }
       return sum + (price || 0);
     }, 0);
@@ -332,7 +340,7 @@ export default function Admin() {
       if (b.customPrice !== null && b.customPrice !== undefined && !isNaN(b.customPrice)) {
         price = b.customPrice;
       } else if (b.service) {
-        price = getServicePriceValue(b.service, b.ironFalloutAddon);
+        price = getServicePriceValue(b.service, b.ironFalloutAddon, b.protectorWaxAddon);
       }
       return sum + (price || 0);
     }, 0);
@@ -353,15 +361,40 @@ export default function Admin() {
     );
   };
 
-  const getWeeklyBookings = () => {
-    console.log('getWeeklyBookings called with bookings:', bookings);
+  const goToPreviousMonth = () => {
+    setCurrentCalendarMonth(prev => {
+      const newMonth = prev.month - 1;
+      if (newMonth < 0) {
+        return { year: prev.year - 1, month: 11 };
+      }
+      return { year: prev.year, month: newMonth };
+    });
+  };
+
+  const goToNextMonth = () => {
+    setCurrentCalendarMonth(prev => {
+      const newMonth = prev.month + 1;
+      if (newMonth > 11) {
+        return { year: prev.year + 1, month: 0 };
+      }
+      return { year: prev.year, month: newMonth };
+    });
+  };
+
+  const goToToday = () => {
+    const now = new Date();
+    setCurrentCalendarMonth({ year: now.getFullYear(), month: now.getMonth() });
+  };
+
+  const getMonthlyBookings = () => {
+    console.log('getMonthlyBookings called with bookings:', bookings);
     
     if (!bookings.length) {
-      console.log('No bookings found, returning empty weeks array');
+      console.log('No bookings found, returning empty array');
       return [];
     }
     
-    // Normalize dates to ensure consistent format
+    // Normalize dates
     const normalizedBookings = bookings.map(booking => {
       let normalizedDate;
       if (typeof booking.date === 'string') {
@@ -379,34 +412,52 @@ export default function Admin() {
       };
     }).filter(booking => booking !== null);
     
-    console.log('Normalized bookings:', normalizedBookings);
-    
-    const sorted = [...normalizedBookings].sort((a, b) => new Date(a.date) - new Date(b.date));
-    console.log('Sorted bookings:', sorted);
-    
-    const weeks = [];
-    let week = Array(7).fill(null).map(() => []);
-    let weekStart = null;
-    
-    sorted.forEach(booking => {
+    // Filter bookings for current month only
+    const monthBookings = normalizedBookings.filter(booking => {
       const date = new Date(booking.date);
-      if (isNaN(date.getTime())) {
-        console.warn('Invalid date found:', booking.date);
-        return;
-      }
-      
-      const dayOfWeek = (date.getDay() + 6) % 7; // Monday = 0, Sunday = 6
-      
-      if (!weekStart || date < weekStart || date >= new Date(weekStart.getTime() + 7*86400000)) {
-        weekStart = new Date(date);
-        weekStart.setDate(date.getDate() - dayOfWeek);
-        week = Array(7).fill(null).map(() => []);
-        weeks.push({ weekStart: new Date(weekStart), days: week });
-      }
-      week[dayOfWeek].push(booking);
+      return date.getFullYear() === currentCalendarMonth.year && 
+             date.getMonth() === currentCalendarMonth.month;
     });
     
-    console.log('Generated weeks:', weeks);
+    // Get first and last day of the month
+    const firstDayOfMonth = new Date(currentCalendarMonth.year, currentCalendarMonth.month, 1);
+    const lastDayOfMonth = new Date(currentCalendarMonth.year, currentCalendarMonth.month + 1, 0);
+    
+    // Build week structure for the month (strict - only current month days)
+    const weeks = [];
+    let currentWeek = Array(7).fill(null).map(() => ({ date: null, bookings: [] }));
+    let weekStartDate = null;
+    
+    // Iterate through each day of the month
+    for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
+      const currentDate = new Date(currentCalendarMonth.year, currentCalendarMonth.month, day);
+      const dayOfWeek = (currentDate.getDay() + 6) % 7; // Monday = 0, Sunday = 6
+      const dateStr = currentDate.toISOString().split('T')[0];
+      
+      // Start new week on Monday or first day
+      if (dayOfWeek === 0 || day === 1) {
+        if (day !== 1) {
+          // Save previous week if it exists
+          weeks.push({ weekStart: weekStartDate, days: currentWeek });
+        }
+        currentWeek = Array(7).fill(null).map(() => ({ date: null, bookings: [] }));
+        weekStartDate = new Date(currentDate);
+        weekStartDate.setDate(currentDate.getDate() - dayOfWeek);
+      }
+      
+      // Add day to current week
+      currentWeek[dayOfWeek] = {
+        date: currentDate,
+        bookings: monthBookings.filter(b => b.date === dateStr)
+      };
+    }
+    
+    // Add final week
+    if (currentWeek.some(d => d.date !== null)) {
+      weeks.push({ weekStart: weekStartDate, days: currentWeek });
+    }
+    
+    console.log('Generated month weeks:', weeks);
     return weeks;
   };
 
@@ -833,84 +884,126 @@ export default function Admin() {
 
         <div className="mb-4">
           <button className="btn btn-outline-info" onClick={() => setShowBookingCalendar(v => !v)}>
-            {showBookingCalendar ? 'Hide' : 'Show'} Booking Calendar & Weekly Summary
+            {showBookingCalendar ? 'Hide' : 'Show'} Monthly Calendar
           </button>
         </div>
         {showBookingCalendar && (
           <div className="card bg-dark mb-4">
             <div className="card-body">
-              <div className="d-flex justify-content-end align-items-center mb-2 gap-4">
-                <span className="fw-bold text-success fs-5">Estimated Total Earnings: €{getTotalEarnings()}</span>
-                <span className="fw-bold text-info fs-5">Actual Total Earned: €{getActualTotalEarned()}</span>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="card-title text-info mb-0">Monthly Calendar</h5>
+                <div className="d-flex gap-4 align-items-center">
+                  <span className="fw-bold text-success">Estimated: €{getTotalEarnings()}</span>
+                  <span className="fw-bold text-info">Earned: €{getActualTotalEarned()}</span>
+                </div>
               </div>
-              <h5 className="card-title text-info mb-3">Booking Calendar & Weekly Summary</h5>
+              
+              {/* Month Navigation */}
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <button className="btn btn-outline-light btn-sm" onClick={goToPreviousMonth}>
+                  ← Previous
+                </button>
+                <h4 className="text-light mb-0">
+                  {new Date(currentCalendarMonth.year, currentCalendarMonth.month).toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                  })}
+                </h4>
+                <div className="d-flex gap-2">
+                  <button className="btn btn-outline-info btn-sm" onClick={goToToday}>
+                    Today
+                  </button>
+                  <button className="btn btn-outline-light btn-sm" onClick={goToNextMonth}>
+                    Next →
+                  </button>
+                </div>
+              </div>
               
               {bookings.length === 0 ? (
                 <div className="text-center py-4">
-                  <p className="text-muted mb-0">No bookings found. The calendar will appear here once you have bookings.</p>
+                  <p className="text-muted mb-0">No bookings found.</p>
                 </div>
               ) : (
                 <div className="table-responsive">
                   <table className="table table-bordered table-dark align-middle">
                     <thead>
-                      <tr>
-                        <th>Week (Mon-Sun)</th>
-                        <th>Mon</th>
-                        <th>Tue</th>
-                        <th>Wed</th>
-                        <th>Thu</th>
-                        <th>Fri</th>
-                        <th>Sat</th>
-                        <th>Sun</th>
-                        <th>Total (€)</th>
+                      <tr className="text-center">
+                        <th style={{width: '14%'}}>Mon</th>
+                        <th style={{width: '14%'}}>Tue</th>
+                        <th style={{width: '14%'}}>Wed</th>
+                        <th style={{width: '14%'}}>Thu</th>
+                        <th style={{width: '14%'}}>Fri</th>
+                        <th style={{width: '14%'}}>Sat</th>
+                        <th style={{width: '14%'}}>Sun</th>
+                        <th style={{width: '2%'}}>Total</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {getWeeklyBookings().map(({ weekStart, days }, i) => {
-                        const weekTotal = days.flat().reduce((sum, b) => {
-                          const price = b.customPrice !== null ? b.customPrice : getServicePriceValue(b.service, b.ironFalloutAddon);
-                          return sum + price;
-                        }, 0);
-                        return (
-                          <tr key={i}>
-                            <td className="fw-bold">{weekStart.toLocaleDateString('en-GB')}</td>
-                            {days.map((dayBookings, dIdx) => (
-                              <td key={dIdx}>
-                                {dayBookings.length === 0 ? (
-                                  <span className="text-muted small">-</span>
-                                ) : (
-                                  dayBookings.map((b, j) => (
-                                    <div key={j} className="mb-2">
-                                      <div className="d-flex align-items-center gap-2">
-                                        <input
-                                          type="checkbox"
-                                          checked={!!b.completed}
-                                          disabled={updatingBooking === b.id}
-                                          onChange={() => handleToggleCompleted(b)}
-                                          title="Mark as completed"
-                                        />
-                                        <strong>{b.name}</strong>
-                                        <span className="badge bg-secondary ms-1">{b.service}</span>
-                                        {b.adminCreated && (
-                                          <span className="badge bg-info ms-1" title="Created by admin">A</span>
-                                        )}
+                      {getMonthlyBookings().length === 0 ? (
+                        <tr>
+                          <td colSpan="8" className="text-center py-4">
+                            <p className="text-muted mb-0">No bookings in {new Date(currentCalendarMonth.year, currentCalendarMonth.month).toLocaleDateString('en-US', { month: 'long' })}</p>
+                          </td>
+                        </tr>
+                      ) : (
+                        getMonthlyBookings().map(({ weekStart, days }, weekIdx) => {
+                          const weekTotal = days
+                            .filter(d => d.date !== null)
+                            .flatMap(d => d.bookings)
+                            .reduce((sum, b) => {
+                              const price = b.customPrice !== null ? b.customPrice : getServicePriceValue(b.service, b.ironFalloutAddon, b.protectorWaxAddon);
+                              return sum + price;
+                            }, 0);
+                          
+                          return (
+                            <tr key={weekIdx} style={{height: '120px'}}>
+                              {days.map((dayData, dayIdx) => (
+                                <td key={dayIdx} className="align-top p-2" style={{verticalAlign: 'top'}}>
+                                  {dayData.date ? (
+                                    <>
+                                      <div className="fw-bold text-primary mb-1">
+                                        {dayData.date.getDate()}
                                       </div>
-                                      <div className="small">
-                                        {b.time} | 
-                                        <span className={b.customPrice !== null ? 'text-warning fw-bold' : ''}>
-                                          €{b.customPrice !== null ? b.customPrice : getServicePriceValue(b.service, b.ironFalloutAddon)}
-                                        </span>
-                                        {b.customPrice !== null && <span className="text-info ms-1">(custom)</span>}
-                                      </div>
-                                    </div>
-                                  ))
-                                )}
+                                      {dayData.bookings.length === 0 ? (
+                                        <span className="text-muted small">-</span>
+                                      ) : (
+                                        <div className="d-flex flex-column gap-1">
+                                          {dayData.bookings.map((b, bIdx) => (
+                                            <div key={bIdx} className="small border-start border-2 border-primary ps-1">
+                                              <div className="d-flex align-items-center gap-1">
+                                                <input
+                                                  type="checkbox"
+                                                  checked={!!b.completed}
+                                                  disabled={updatingBooking === b.id}
+                                                  onChange={() => handleToggleCompleted(b)}
+                                                  title="Mark as completed"
+                                                  style={{width: '12px', height: '12px'}}
+                                                />
+                                                <strong className="small">{b.name}</strong>
+                                              </div>
+                                              <div className="text-muted" style={{fontSize: '0.75rem'}}>
+                                                {b.time} • {b.service}
+                                                {b.ironFalloutAddon && <span className="text-warning"> +IF</span>}
+                                                {b.protectorWaxAddon && <span className="text-info"> +PW</span>}
+                                              </div>
+                                              <div className={b.customPrice !== null ? 'text-warning fw-bold' : 'text-success'} style={{fontSize: '0.75rem'}}>
+                                                €{b.customPrice !== null ? b.customPrice : getServicePriceValue(b.service, b.ironFalloutAddon, b.protectorWaxAddon)}
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </>
+                                  ) : null}
+                                </td>
+                              ))}
+                              <td className="fw-bold text-success text-center">
+                                {weekTotal > 0 ? `€${weekTotal}` : '-'}
                               </td>
-                            ))}
-                            <td className="fw-bold text-success">€{weekTotal}</td>
-                          </tr>
-                        );
-                      })}
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1008,7 +1101,7 @@ export default function Admin() {
                     {/* Conflict Warning */}
                     {newBooking.date && newBooking.time && newBooking.service && (
                       (() => {
-                        const conflicts = getConflictingBookings(newBooking.date, newBooking.time, newBooking.service, newBooking.ironFalloutAddon);
+                        const conflicts = getConflictingBookings(newBooking.date, newBooking.time, newBooking.service, newBooking.ironFalloutAddon, newBooking.protectorWaxAddon);
                         return conflicts.length > 0 ? (
                           <div className="col-12">
                             <div className="alert alert-warning" role="alert">
@@ -1040,6 +1133,23 @@ export default function Admin() {
                             Iron Fallout & Tar Remover (+€20)
                           </label>
                         </div>
+                        <div className="form-check mt-2">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="protectorWaxAddonAdmin"
+                            checked={newBooking.protectorWaxAddon}
+                            onChange={(e) => setNewBooking({...newBooking, protectorWaxAddon: e.target.checked})}
+                          />
+                          <label className="form-check-label text-light" htmlFor="protectorWaxAddonAdmin">
+                            Protector Wax (+€25)
+                          </label>
+                        </div>
+                        {newBooking.protectorWaxAddon && !newBooking.ironFalloutAddon && (
+                          <div className="alert alert-info mt-2 mb-0 small" role="alert">
+                            <strong>Tip:</strong> Iron Fallout is recommended before Protector Wax.
+                          </div>
+                        )}
                       </div>
                     )}
                     <div className="col-12">
@@ -1143,6 +1253,9 @@ export default function Admin() {
                               {booking.ironFalloutAddon && (
                                 <span className="badge bg-warning text-dark ms-1">+ Iron Fallout</span>
                               )}
+                              {booking.protectorWaxAddon && (
+                                <span className="badge bg-info text-dark ms-1">+ Protector Wax</span>
+                              )}
                             </td>
                             <td>
                               {editingBookingPrice?.id === booking.id ? (
@@ -1177,7 +1290,7 @@ export default function Admin() {
                               ) : (
                                 <div className="d-flex align-items-center gap-2">
                                   <span className={booking.customPrice ? 'text-warning fw-bold' : ''}>
-                                    {getServicePrice(booking.service, booking.ironFalloutAddon, booking.customPrice)}
+                                    {getServicePrice(booking.service, booking.ironFalloutAddon, booking.customPrice, booking.protectorWaxAddon)}
                                   </span>
                                   <button
                                     className="btn btn-outline-primary btn-sm"

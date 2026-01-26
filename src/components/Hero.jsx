@@ -132,6 +132,26 @@ export default function Hero({ onBookNow }) {
             >
               <i className="bi bi-facebook"></i>
             </a>
+            <a
+              href="https://www.tiktok.com/@jakescarcare4"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn d-inline-flex align-items-center justify-content-center"
+              style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                backgroundColor: '#000',
+                color: '#fff',
+                fontSize: '2rem',
+                border: '2px solid #000',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                transition: 'background 0.2s, color 0.2s',
+              }}
+              aria-label="TikTok"
+            >
+              <i className="bi bi-tiktok"></i>
+            </a>
           </div>
         </div>
         <div className="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3 mt-3">

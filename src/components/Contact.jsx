@@ -6,14 +6,15 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
 const SERVICES = ['Full Valet', 'Exterior Only', 'Interior Only'];
-const AVAILABLE_TIMES = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
+const AVAILABLE_TIMES = ['09:00', '13:00'];
 
 // Service duration in hours (including travel time)
 const SERVICE_DURATIONS = {
   'Full Valet': 4,       // 3-4 hours service + 1 hour travel
   'Exterior Only': 2,    // 1-2 hours service + 1 hour travel
   'Interior Only': 3,    // 2-3 hours service + 1 hour travel
-  'Iron Fallout & Tar Remover': 1.5 // 30 min service + 1 hour travel
+  'Iron Fallout & Tar Remover': 1.5, // 30 min service + 1 hour travel
+  'Protector Wax': 2.5   // 1.5-2 hours service + 1 hour travel
 };
 
 export default function Contact({ isModal = false, onClose, onLeaveReview }) {
@@ -26,7 +27,8 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
     date: null,
     time: '',
     message: '',
-    ironFalloutAddon: false
+    ironFalloutAddon: false,
+    protectorWaxAddon: false
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
@@ -249,12 +251,9 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
     const dateStr = createLocalDateString(date);
     const blockedTimes = getBlockedTimesForDate(dateStr);
     
-    // Check if there are enough available slots for the shortest service (1.5 hours)
+    // Check if any slot remains available for booking
     const availableSlots = AVAILABLE_TIMES.length - blockedTimes.length;
-    const shortestServiceDuration = Math.min(...Object.values(SERVICE_DURATIONS));
-    
-    // Need at least enough slots for the shortest service
-    return availableSlots >= Math.ceil(shortestServiceDuration);
+    return availableSlots > 0;
   };
 
   // Check if Iron Fallout add-on should be shown
@@ -262,14 +261,10 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
     return formData.service === 'Exterior Only' || formData.service === 'Full Valet';
   };
 
-  // Get total service duration including add-ons
+  // Get total service duration (add-ons don't extend booking time)
   const getTotalServiceDuration = () => {
     if (!formData.service) return 0;
-    let duration = SERVICE_DURATIONS[formData.service];
-    if (formData.ironFalloutAddon) {
-      duration += SERVICE_DURATIONS['Iron Fallout & Tar Remover'];
-    }
-    return duration;
+    return SERVICE_DURATIONS[formData.service];
   };
 
   // Only allow booking from tomorrow onwards
@@ -325,8 +320,9 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
       setFormData(prev => ({ 
         ...prev, 
         time: '',
-        // Clear Iron Fallout add-on if service doesn't support it
-        ironFalloutAddon: value !== 'Exterior Only' && value !== 'Full Valet' ? false : prev.ironFalloutAddon
+        // Clear add-ons if service doesn't support them
+        ironFalloutAddon: value !== 'Exterior Only' && value !== 'Full Valet' ? false : prev.ironFalloutAddon,
+        protectorWaxAddon: value !== 'Exterior Only' && value !== 'Full Valet' ? false : prev.protectorWaxAddon
       }));
       
       // Update available times when service changes
@@ -548,7 +544,8 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
         date: null,
         time: '',
         message: '',
-        ironFalloutAddon: false
+        ironFalloutAddon: false,
+        protectorWaxAddon: false
       });
       setTouched({});
       
@@ -664,6 +661,30 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
                   <strong>Add Iron Fallout & Tar Remover (+€20)</strong> - Removes embedded iron particles and tar for a smoother finish
                 </label>
               </div>
+              <div className="form-check mt-2">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="protectorWaxAddon"
+                  name="protectorWaxAddon"
+                  checked={formData.protectorWaxAddon}
+                  onChange={(e) => {
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      protectorWaxAddon: e.target.checked,
+                      time: '' // Clear time when add-on changes
+                    }));
+                  }}
+                />
+                <label className="form-check-label text-light" htmlFor="protectorWaxAddon">
+                  <strong>Add Protector Wax (+€25)</strong> - Long-lasting paint protection with enhanced shine
+                </label>
+              </div>
+              {formData.protectorWaxAddon && !formData.ironFalloutAddon && (
+                <div className="alert alert-info mt-2 mb-0 small" role="alert">
+                  <strong>Tip:</strong> Iron Fallout & Tar Remover is recommended before applying Protector Wax for best results.
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -953,6 +974,30 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
                     <strong>Add Iron Fallout & Tar Remover (+€20)</strong> - Removes embedded iron particles and tar for a smoother finish
                   </label>
                 </div>
+                <div className="form-check mt-2">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="protectorWaxAddonPage"
+                    name="protectorWaxAddon"
+                    checked={formData.protectorWaxAddon}
+                    onChange={(e) => {
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        protectorWaxAddon: e.target.checked,
+                        time: '' // Clear time when add-on changes
+                      }));
+                    }}
+                  />
+                  <label className="form-check-label text-light" htmlFor="protectorWaxAddonPage">
+                    <strong>Add Protector Wax (+€25)</strong> - Long-lasting paint protection with enhanced shine
+                  </label>
+                </div>
+                {formData.protectorWaxAddon && !formData.ironFalloutAddon && (
+                  <div className="alert alert-info mt-2 mb-0 small" role="alert">
+                    <strong>Tip:</strong> Iron Fallout & Tar Remover is recommended before applying Protector Wax for best results.
+                  </div>
+                )}
               </div>
             )}
             <div className="col-12 col-md-6">
