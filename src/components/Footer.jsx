@@ -37,7 +37,7 @@ export default function Footer() {
             © {new Date().getFullYear()} Jakes Car Care. All rights reserved.
           </div>
         </div>
-        <div className="d-flex gap-3 justify-content-center">
+        <div className="d-flex flex-row flex-nowrap align-items-center justify-content-center gap-3">
           <a href="https://www.facebook.com/profile.php?id=61560837419584" target="_blank" rel="noopener noreferrer" className="text-white-50 footer-social" aria-label="Facebook">
             <i className="bi bi-facebook fs-5"></i>
           </a>
