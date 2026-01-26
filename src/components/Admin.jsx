@@ -43,7 +43,7 @@ export default function Admin() {
   const [editingBookingDate, setEditingBookingDate] = useState(null);
 
   const SERVICES = ['Full Valet', 'Exterior Only', 'Interior Only'];
-  const AVAILABLE_TIMES = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
+  const AVAILABLE_TIMES = ['09:00', '13:00'];
 
   // State for confirmation modal
   const [confirmModal, setConfirmModal] = useState({

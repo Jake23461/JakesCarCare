@@ -6,7 +6,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
 const SERVICES = ['Full Valet', 'Exterior Only', 'Interior Only'];
-const AVAILABLE_TIMES = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
+const AVAILABLE_TIMES = ['09:00', '13:00'];
 
 // Service duration in hours (including travel time)
 const SERVICE_DURATIONS = {
@@ -249,12 +249,9 @@ export default function Contact({ isModal = false, onClose, onLeaveReview }) {
     const dateStr = createLocalDateString(date);
     const blockedTimes = getBlockedTimesForDate(dateStr);
     
-    // Check if there are enough available slots for the shortest service (1.5 hours)
+    // Check if any slot remains available for booking
     const availableSlots = AVAILABLE_TIMES.length - blockedTimes.length;
-    const shortestServiceDuration = Math.min(...Object.values(SERVICE_DURATIONS));
-    
-    // Need at least enough slots for the shortest service
-    return availableSlots >= Math.ceil(shortestServiceDuration);
+    return availableSlots > 0;
   };
 
   // Check if Iron Fallout add-on should be shown
