@@ -88,7 +88,7 @@ export default function Hero({ onBookNow }) {
           >
             Professional car valeting services at your doorstep
           </p>
-          <div className="mb-4 d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
+          <div className="mb-4 d-flex flex-column justify-content-center align-items-center gap-3">
             <a 
               href="tel:0877665058"
               className="btn btn-outline-light btn-lg px-4 py-2 fw-semibold"
@@ -97,7 +97,8 @@ export default function Hero({ onBookNow }) {
                 textDecoration: 'none',
                 transition: 'all 0.3s ease',
                 border: '2px solid white',
-                borderRadius: '50px'
+                borderRadius: '50px',
+                whiteSpace: 'nowrap'
               }}
               onMouseEnter={(e) => {
                 e.target.style.backgroundColor = 'white';
@@ -112,46 +113,48 @@ export default function Hero({ onBookNow }) {
             >
               📞 Call 087 766 5058
             </a>
-            <a
-              href="https://www.facebook.com/profile.php?id=61560837419584"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn d-inline-flex align-items-center justify-content-center"
-              style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '50%',
-                backgroundColor: '#4267B2',
-                color: '#fff',
-                fontSize: '2rem',
-                border: '2px solid #4267B2',
-                boxShadow: '0 2px 8px rgba(66,103,178,0.15)',
-                transition: 'background 0.2s, color 0.2s',
-              }}
-              aria-label="Facebook"
-            >
-              <i className="bi bi-facebook"></i>
-            </a>
-            <a
-              href="https://www.tiktok.com/@jakescarcare4"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn d-inline-flex align-items-center justify-content-center"
-              style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '50%',
-                backgroundColor: '#000',
-                color: '#fff',
-                fontSize: '2rem',
-                border: '2px solid #000',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                transition: 'background 0.2s, color 0.2s',
-              }}
-              aria-label="TikTok"
-            >
-              <i className="bi bi-tiktok"></i>
-            </a>
+            <div className="d-flex justify-content-center gap-3">
+              <a
+                href="https://www.facebook.com/profile.php?id=61560837419584"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn d-inline-flex align-items-center justify-content-center"
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  backgroundColor: '#4267B2',
+                  color: '#fff',
+                  fontSize: '2rem',
+                  border: '2px solid #4267B2',
+                  boxShadow: '0 2px 8px rgba(66,103,178,0.15)',
+                  transition: 'background 0.2s, color 0.2s',
+                }}
+                aria-label="Facebook"
+              >
+                <i className="bi bi-facebook"></i>
+              </a>
+              <a
+                href="https://www.tiktok.com/@jakescarcare4"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn d-inline-flex align-items-center justify-content-center"
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  backgroundColor: '#000',
+                  color: '#fff',
+                  fontSize: '2rem',
+                  border: '2px solid #000',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  transition: 'background 0.2s, color 0.2s',
+                }}
+                aria-label="TikTok"
+              >
+                <i className="bi bi-tiktok"></i>
+              </a>
+            </div>
           </div>
         </div>
         <div className="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3 mt-3">
