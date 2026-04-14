@@ -1,2 +1,2 @@
-:HL["/JakesCarCare/_next/static/chunks/0d7qjoqqawmh_.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"adminjake2005","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"ahZjYvJMXK4z7W0dTqpaz"}
+:HL["/_next/static/chunks/0d7qjoqqawmh_.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"adminjake2005","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"0w3MgzfEOlMz_M-MIJJvM"}
