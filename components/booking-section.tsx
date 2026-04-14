@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, forwardRef } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Car,
@@ -29,6 +31,23 @@ import {
   type BookingData,
 } from "@/lib/bookings";
 
+// ─── DatePicker custom trigger ───────────────────────────────────────────────
+
+const DateTrigger = forwardRef<
+  HTMLButtonElement,
+  { value?: string; onClick?: () => void }
+>(({ value, onClick }, ref) => (
+  <button
+    type="button"
+    ref={ref}
+    onClick={onClick}
+    className="h-12 w-full rounded-xl border border-border bg-surface pl-10 pr-4 text-sm text-left text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+  >
+    {value ? value : <span className="text-foreground-muted">Select a weekend date</span>}
+  </button>
+));
+DateTrigger.displayName = "DateTrigger";
+
 // ─── Service card config ──────────────────────────────────────────────────────
 
 const SERVICE_CONFIG = [
@@ -38,7 +57,7 @@ const SERVICE_CONFIG = [
     label: "Full Valet",
     desc: "Complete inside-and-out transformation",
     tag: `${SERVICE_DURATIONS["Full Valet"]}hrs`,
-    price: "From €100",
+    price: "€100–€120",
   },
   {
     id: "Exterior Only",
@@ -46,7 +65,7 @@ const SERVICE_CONFIG = [
     label: "Exterior Only",
     desc: "Full exterior foam wash, rinse, hand dry",
     tag: `${SERVICE_DURATIONS["Exterior Only"]}hrs`,
-    price: "From €40",
+    price: "€50",
   },
   {
     id: "Interior Only",
@@ -54,7 +73,7 @@ const SERVICE_CONFIG = [
     label: "Interior Only",
     desc: "Deep vacuum, trim clean, glass, steam",
     tag: `${SERVICE_DURATIONS["Interior Only"]}hrs`,
-    price: "From €60",
+    price: "€70–€90",
   },
 ] as const;
 
@@ -113,24 +132,16 @@ export function BookingSection() {
   }, [form.date, refreshBlocked]);
 
   // ── Date handling ─────────────────────────────────────────────────────────
-  const handleDateChange = (value: string) => {
+  const handleDateSelect = (date: Date | null) => {
     setDateError("");
     setError("");
-    if (!value) {
+    if (!date) {
       set("date", "");
       set("time", "");
       return;
     }
-    // Validate weekend
-    const d = new Date(value + "T00:00:00");
-    if (!isWeekend(d)) {
-      setDateError("Bookings are weekends only (Sat & Sun). Please pick a weekend date.");
-      set("date", "");
-      set("time", "");
-      return;
-    }
-    set("date", value);
-    set("time", ""); // reset time when date changes
+    set("date", toLocalDateString(date));
+    set("time", "");
   };
 
   // ── Add-on visibility ─────────────────────────────────────────────────────
@@ -308,13 +319,13 @@ export function BookingSection() {
                         key: "ironFalloutAddon" as const,
                         label: "Iron Fallout & Tar Remover",
                         desc: "Decontaminates paintwork before wash",
-                        price: "+€25",
+                        price: "+€20",
                       },
                       {
                         key: "protectorWaxAddon" as const,
                         label: "Protector Wax",
                         desc: "Long-lasting paint protection applied after wash",
-                        price: "+€30",
+                        price: "+€25",
                       },
                     ].map(({ key, label, desc, price }) => {
                       const active = form[key];
@@ -377,13 +388,18 @@ export function BookingSection() {
                 {/* Date picker */}
                 <div className="flex-1">
                   <div className="relative">
-                    <CalendarDays className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" />
-                    <input
-                      type="date"
-                      min={tomorrow}
-                      value={form.date}
-                      onChange={(e) => handleDateChange(e.target.value)}
-                      className="h-12 w-full rounded-xl border border-border bg-surface pl-10 pr-4 text-sm text-foreground placeholder:text-foreground-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                    <CalendarDays className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted z-10" />
+                    <DatePicker
+                      selected={form.date ? new Date(form.date + "T00:00:00") : null}
+                      onChange={handleDateSelect}
+                      filterDate={isWeekend}
+                      minDate={new Date(tomorrow + "T00:00:00")}
+                      dateFormat="dd/MM/yyyy"
+                      customInput={<DateTrigger />}
+                      calendarClassName="jcc-calendar"
+                      popperPlacement="bottom-start"
+                      showPopperArrow={false}
+                      wrapperClassName="w-full"
                     />
                   </div>
                   {dateError && (

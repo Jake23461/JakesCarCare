@@ -119,7 +119,7 @@ export function GalleryTab() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <h2 className="text-lg font-black text-foreground">Gallery</h2>
 
       {error && (
@@ -130,9 +130,9 @@ export function GalleryTab() {
       )}
 
       {/* Upload panel */}
-      <div className="rounded-2xl border border-border bg-surface p-5">
+      <div className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
         <h3 className="mb-4 text-sm font-bold text-foreground">Upload new</h3>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <select
             value={uploadCategory}
             onChange={(e) => setUploadCategory(e.target.value as GalleryCategory)}
@@ -205,12 +205,12 @@ export function GalleryTab() {
       </div>
 
       {/* Category tabs */}
-      <div className="flex flex-wrap gap-1">
+      <div className="flex gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {CATEGORIES.map((c) => (
           <button
             key={c}
             onClick={() => setActiveCategory(c)}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+            className={`shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition ${
               activeCategory === c
                 ? "bg-accent text-white"
                 : "text-foreground-muted hover:bg-surface-raised hover:text-foreground"
@@ -237,7 +237,7 @@ export function GalleryTab() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
           {filtered.map((item) => (
             <div
               key={item.id}

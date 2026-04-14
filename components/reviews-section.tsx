@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { getApprovedReviews, type FirestoreReview } from "@/lib/reviews";
-import { reviews as fallbackReviews } from "@/lib/site";
+import { reviews as fallbackReviews, siteConfig } from "@/lib/site";
 import { AnimateIn } from "@/components/ui/animate-in";
 import { StaggerChildren } from "@/components/ui/stagger-children";
 
@@ -66,6 +66,20 @@ export function ReviewsSection() {
           </div>
         ))}
       </StaggerChildren>
+
+      <AnimateIn className="mx-auto mt-10 max-w-5xl text-center">
+        <p className="mb-4 text-sm text-white/70">
+          Had a great experience? Leave the same Google review as on the old site.
+        </p>
+        <a
+          href={siteConfig.googleReviewsHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-white/15 bg-white/8 px-7 py-3 text-sm font-bold text-white transition hover:border-accent/50 hover:bg-accent hover:text-white"
+        >
+          Leave a Review on Google
+        </a>
+      </AnimateIn>
     </section>
   );
 }

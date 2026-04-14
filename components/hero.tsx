@@ -82,6 +82,7 @@ export function Hero() {
         <motion.h1
           {...fadeUp(0.12)}
           className="text-5xl font-extrabold leading-tight tracking-tight text-white sm:text-6xl lg:text-7xl"
+          style={{ fontFamily: "var(--font-display)" }}
         >
           {TAGLINE}
         </motion.h1>

@@ -1,14 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Inter } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-  weight: ["400", "500", "600", "700", "800", "900"],
-});
 
 export const metadata: Metadata = {
   title: "Jake's Car Care | Mobile Valeting — Roscommon & Longford",
@@ -28,7 +20,7 @@ export default function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en" className="h-full">
-      <body className={`${inter.variable} min-h-full flex flex-col antialiased`}>
+      <body className="min-h-full flex flex-col antialiased">
         {children}
       </body>
     </html>

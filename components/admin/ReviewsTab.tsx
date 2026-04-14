@@ -70,7 +70,7 @@ export function ReviewsTab() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <h2 className="text-lg font-black text-foreground">Reviews</h2>
 
       {error && (
@@ -93,13 +93,13 @@ export function ReviewsTab() {
           {reviews.map((r) => (
             <div
               key={r.id}
-              className={`rounded-2xl border p-5 ${
+              className={`rounded-2xl border p-4 sm:p-5 ${
                 r.approved
                   ? "border-border bg-surface"
                   : "border-amber-400/20 bg-amber-400/5"
               }`}
             >
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm font-bold text-foreground">{r.name}</span>
@@ -128,7 +128,7 @@ export function ReviewsTab() {
                   )}
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 self-end sm:self-auto">
                   {!r.approved && (
                     <button
                       onClick={() => approve(r.id)}

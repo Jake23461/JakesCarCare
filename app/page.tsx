@@ -206,8 +206,8 @@ export default function Home() {
                   <div className="col-span-2 overflow-hidden rounded-2xl border border-border">
                     <div className="relative h-48">
                       <Image
-                        src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80"
-                        alt="Clean car after professional detailing"
+                        src="/images/D593888A-A407-4D5F-893B-5A8BE28B9977.jpeg"
+                        alt="Jake's Car Care mobile valeting service area"
                         fill
                         className="object-cover"
                       />
@@ -271,6 +271,9 @@ export default function Home() {
               <h2 className="mb-8 text-center text-3xl font-black text-foreground">
                 Opening Hours
               </h2>
+              <p className="mb-5 text-center text-sm text-foreground-muted">
+                Weekends only until further notice.
+              </p>
               <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
                 {openingHours.map(({ day, time }) => (
                   <li
@@ -325,7 +328,7 @@ export default function Home() {
                     Prefer to call?
                   </p>
                   <p className="text-xs text-foreground-muted">
-                    Mon–Sat, 9 am – 6 pm
+                    Weekends only until further notice
                   </p>
                 </div>
                 <a
@@ -372,14 +375,19 @@ export default function Home() {
             <div className="mx-auto max-w-4xl">
               <div className="mb-4 flex items-center justify-center">
                 {siteConfig.logoSrc ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={siteConfig.logoSrc}
-                    alt={siteConfig.businessName}
-                    className="h-16 w-auto opacity-90"
-                  />
+                  <div className="flex flex-col items-center gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={siteConfig.logoSrc}
+                      alt={siteConfig.businessName}
+                      className="h-16 w-auto opacity-90"
+                    />
+                    <p className="brand-wordmark text-sm text-foreground">
+                      {siteConfig.businessName}
+                    </p>
+                  </div>
                 ) : (
-                  <p className="text-base font-bold text-foreground">
+                  <p className="brand-wordmark text-base text-foreground">
                     {siteConfig.businessName}
                   </p>
                 )}
@@ -396,12 +404,28 @@ export default function Home() {
               </p>
               <div className="mt-5 flex items-center justify-center gap-5">
                 <a
+                  href={siteConfig.facebookHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-raised px-4 py-2 text-sm font-semibold text-foreground-muted transition hover:border-accent/40 hover:text-foreground"
+                >
+                  Facebook
+                </a>
+                <a
                   href={siteConfig.tiktokHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-foreground-muted transition hover:text-foreground"
+                  className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-raised px-4 py-2 text-sm font-semibold text-foreground-muted transition hover:border-accent/40 hover:text-foreground"
                 >
                   TikTok
+                </a>
+                <a
+                  href={siteConfig.googleReviewsHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-bold text-white transition hover:bg-accent-dark"
+                >
+                  Leave a Review
                 </a>
               </div>
               <p className="mt-8 text-xs text-foreground-muted/40">

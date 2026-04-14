@@ -41,6 +41,7 @@ export interface BookingData {
   protectorWaxAddon: boolean;
   adminCreated?: boolean;
   price?: string;
+  completed?: boolean;
 }
 
 export interface Booking extends BookingData {

@@ -2,8 +2,24 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Menu, X, Phone, Car } from "lucide-react";
+import { Menu, X, Phone } from "lucide-react";
 import { siteConfig, navLinks } from "@/lib/site";
+
+function FacebookIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.887v2.253h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" />
+    </svg>
+  );
+}
+
+function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.5a8.18 8.18 0 004.82 1.54V6.6a4.85 4.85 0 01-1.05.09z" />
+    </svg>
+  );
+}
 
 export function Nav() {
   const [open, setOpen] = useState(false);
@@ -22,39 +38,26 @@ export function Nav() {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-surface/95 backdrop-blur-sm shadow-lg shadow-black/30 border-b border-border"
+          ? "border-b border-border bg-surface/95 shadow-lg shadow-black/30 backdrop-blur-sm"
           : "bg-transparent"
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        {/* Logo / wordmark */}
+      <div className="flex h-16 w-full items-center justify-between px-4 sm:px-6">
         <a
           href="/"
           className="flex items-center gap-2.5 transition hover:opacity-80"
           aria-label={siteConfig.businessName}
         >
-          {siteConfig.logoSrc ? (
-            /* Logo image — drop file at public/images/jakes-logo.png */
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={siteConfig.logoSrc}
-              alt={siteConfig.businessName}
-              className="h-9 w-auto"
-            />
-          ) : (
-            /* Text fallback while logo file is pending */
-            <>
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent">
-                <Car className="h-4 w-4 text-white" />
-              </span>
-              <span className="text-base font-bold tracking-tight text-foreground">
-                {siteConfig.businessName}
-              </span>
-            </>
-          )}
+          <span
+            aria-hidden="true"
+            className="block h-10 w-[72px] shrink-0 bg-contain bg-left bg-no-repeat sm:h-11 sm:w-[80px]"
+            style={{ backgroundImage: "url('/gallery/Logo.png')" }}
+          />
+          <span className="brand-wordmark hidden text-sm text-foreground sm:block">
+            {siteConfig.businessName}
+          </span>
         </a>
 
-        {/* Desktop nav */}
         <nav className="hidden items-center gap-8 md:flex">
           {navLinks.map(({ href, label }) => (
             <a
@@ -72,9 +75,30 @@ export function Nav() {
             <Phone className="h-4 w-4" />
             {siteConfig.phoneDisplay}
           </a>
+          <div className="flex items-center gap-2">
+            <a
+              href={siteConfig.facebookHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-raised px-3 py-2 text-xs font-semibold text-foreground/70 transition hover:border-accent/40 hover:text-foreground"
+            >
+              <FacebookIcon className="h-4 w-4" />
+              Facebook
+            </a>
+            <a
+              href={siteConfig.tiktokHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="TikTok"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-raised px-3 py-2 text-xs font-semibold text-foreground/70 transition hover:border-accent/40 hover:text-foreground"
+            >
+              <TikTokIcon className="h-4 w-4" />
+              TikTok
+            </a>
+          </div>
         </nav>
 
-        {/* Mobile: tap-to-call + hamburger */}
         <div className="flex items-center gap-3 md:hidden">
           <a
             href={siteConfig.phoneHref}
@@ -93,7 +117,6 @@ export function Nav() {
         </div>
       </div>
 
-      {/* Mobile dropdown */}
       {open && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
@@ -120,6 +143,28 @@ export function Nav() {
               <Phone className="h-4 w-4" />
               {siteConfig.phoneDisplay}
             </a>
+            <div className="mt-3 flex items-center justify-center gap-5 border-t border-border pt-3">
+              <a
+                href={siteConfig.facebookHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                className="flex items-center gap-1.5 text-sm text-foreground/60 transition hover:text-foreground"
+              >
+                <FacebookIcon className="h-4 w-4" />
+                Facebook
+              </a>
+              <a
+                href={siteConfig.tiktokHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="TikTok"
+                className="flex items-center gap-1.5 text-sm text-foreground/60 transition hover:text-foreground"
+              >
+                <TikTokIcon className="h-4 w-4" />
+                TikTok
+              </a>
+            </div>
           </nav>
         </motion.div>
       )}

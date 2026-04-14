@@ -1,8 +1,7 @@
 /**
- * Jake's Car Care — site content configuration
+ * Jake's Car Care site content configuration
  *
  * All copy, media paths, and data live here.
- * Swap mediaSrc/bgImageSrc/posterSrc once you have real TikTok-exported assets.
  */
 
 import {
@@ -16,51 +15,31 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-// ─── Hero media ─────────────────────────────────────────────────────────────
-//
-// HOW TO SWAP IN YOUR OWN VIDEOS:
-//   1. Export your TikTok clean-car reveal as an .mp4
-//   2. Drop it into public/videos/jakes-car-care-reveal.mp4
-//   3. Add poster/bg images to public/images/
-//   4. Update the four paths below — that's the only change needed.
-//
-// Current state: Unsplash/picsum placeholders (clearly marked).
-
 export const heroMedia = {
-  /** Switch to "video" once your .mp4 is in /public/videos/ */
   mediaType: "image" as "video" | "image",
-
-  /** PLACEHOLDER → replace with: /videos/jakes-car-care-reveal.mp4 */
   mediaSrc:
     "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=1920&q=80",
-
-  /** PLACEHOLDER → replace with: /images/jakes-car-care-poster.jpg */
   posterSrc: "/images/jakes-car-care-poster.jpg",
-
-  /** PLACEHOLDER → replace with: /images/jakes-car-care-dirty.jpg */
   bgImageSrc:
     "https://images.unsplash.com/photo-1558981852-426c349548ab?auto=format&fit=crop&w=1920&q=80",
-
-  /** Fallback still if video fails */
   fallbackImageSrc:
     "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=1920&q=80",
 };
-
-// ─── Site config ─────────────────────────────────────────────────────────────
 
 export const siteConfig = {
   businessName: "Jake's Car Care",
   shortName: "Jake's",
   tagline: "From road grime to showroom shine.",
-  /** Drop logo file at public/images/jakes-logo.png to activate everywhere */
-  logoSrc: "/images/jakes-logo.png",
+  logoSrc: "",
   description:
-    "Mobile car valeting and detailing across Roscommon and Longford. Full valet, interior clean, exterior wash, and paint-safe detailing — we come to you.",
+    "Mobile car valeting and detailing across Roscommon and Longford. Full valet, interior clean, exterior wash, and paint-safe detailing - we come to you.",
   location: "Strokestown, Co. Roscommon",
   serviceArea: "Roscommon & Longford",
   phoneDisplay: "087 766 5058",
   phoneHref: "tel:0877665058",
   tiktokHref: "https://www.tiktok.com/@jakescarcare4",
+  facebookHref: "https://www.facebook.com/profile.php?id=61560837419584",
+  googleReviewsHref: "https://g.page/r/CagRJ0TEM8I9EBE/review",
   heroTitleLine1: "Road Grime",
   heroTitleLine2: "to Showroom Shine.",
   heroSubtitle:
@@ -70,8 +49,6 @@ export const siteConfig = {
   heroSecondary: { label: "View services", href: "#services" },
 } as const;
 
-// ─── Navigation ──────────────────────────────────────────────────────────────
-
 export const navLinks = [
   { href: "#services", label: "Services" },
   { href: "#about", label: "About" },
@@ -79,16 +56,12 @@ export const navLinks = [
   { href: "#contact", label: "Contact" },
 ];
 
-// ─── Trust strip ─────────────────────────────────────────────────────────────
-
 export const trustPoints = [
   { label: "Mobile service", sub: "We come to you" },
   { label: "Roscommon & Longford", sub: "Full coverage" },
   { label: "Interior & exterior", sub: "Full valet available" },
   { label: "Professional finish", sub: "Every single time" },
 ];
-
-// ─── Services ────────────────────────────────────────────────────────────────
 
 export type Service = {
   icon: LucideIcon;
@@ -99,36 +72,34 @@ export type Service = {
 
 export const services: Service[] = [
   {
-    icon: Droplets,
-    title: "Exterior Wash",
-    description:
-      "Full exterior foam pre-wash, contact wash, rinse, and hand dry. Door shuts, arches, and wheels all cleaned. Leaves your car spotless and protected.",
-    tag: "From €40",
-  },
-  {
-    icon: Sparkles,
-    title: "Interior Valet",
-    description:
-      "Deep vacuum, dashboard and trim wipe-down, glass clean, seat and carpet steam clean, odour treatment, and leather conditioning where applicable.",
-    tag: "From €60",
-  },
-  {
     icon: Car,
     title: "Full Valet",
     description:
-      "Complete inside-and-out transformation. Our most popular package — exterior wash plus full interior valet for a showroom-ready result.",
-    tag: "From €100",
+      "Complete transformation inside and out. Exterior shampoo and wax, wheel cleaning and tyre shine, window cleaning, full vacuum, dashboard and console clean, leather/fabric treatment, and air freshener.",
+    tag: "EUR100-EUR120",
+  },
+  {
+    icon: Droplets,
+    title: "Exterior Only",
+    description:
+      "Full exterior wash and protection - no interior cleaning. Exterior shampoo and wax, wheel cleaning and tyre shine, window cleaning, and air freshener. Perfect when the inside is already clean.",
+    tag: "EUR50",
+  },
+  {
+    icon: Sparkles,
+    title: "Interior Only",
+    description:
+      "Deep interior cleaning and restoration. Full vacuum and dust removal, dashboard and console cleaning, leather/fabric treatment, and air freshener. Restores your cabin to showroom condition.",
+    tag: "EUR70-EUR90",
   },
   {
     icon: Shield,
-    title: "Paint-Safe Detailing",
+    title: "Premium Add-ons",
     description:
-      "Iron fallout removal, tar decontamination, clay bar treatment, and paint protection. Ideal before long trips or selling your vehicle.",
-    tag: "From €80",
+      "Enhance any service with Protector Wax (+EUR25) for lasting paint protection and shine, or Iron Fallout & Tar Remover (+EUR20) to remove embedded particles for a smoother finish. Select during booking.",
+    tag: "From +EUR20",
   },
 ];
-
-// ─── Service areas ────────────────────────────────────────────────────────────
 
 export const serviceAreas = [
   "Strokestown",
@@ -143,8 +114,6 @@ export const serviceAreas = [
   "Loughrea",
 ];
 
-// ─── Reviews (placeholders — add real Google reviews when available) ──────────
-
 export type Review = {
   name: string;
   text: string;
@@ -153,44 +122,41 @@ export type Review = {
 
 export const reviews: Review[] = [
   {
-    name: "Ciarán M.",
-    text: "Jake did a brilliant job on my Audi — hadn't been properly cleaned in years and it came out looking brand new. Highly recommend.",
+    name: "Bernadette Trimble",
+    text: "Jake did a fab job on the full car valet. Better than the shops do.",
     stars: 5,
   },
   {
-    name: "Aoife B.",
-    text: "Fantastic service. Jake came to my workplace, did the full valet in a couple of hours, and the car was immaculate. Will definitely be booking again.",
+    name: "Yasin Machigov",
+    text: "Serious work done on my car by Jake. Very respectful and took care of me.",
     stars: 5,
   },
   {
-    name: "Seán F.",
-    text: "Best value I've found for mobile valeting in Roscommon. Professional attitude, quality products, and a great finish every time.",
+    name: "Avril",
+    text: "Great job on the interior and exterior of my car. Lovely to deal with and prompt replies! Thanks again, Jake!",
     stars: 5,
   },
 ];
 
-// ─── Opening hours ────────────────────────────────────────────────────────────
-
 export type HoursEntry = { day: string; shortDay: string; time: string };
 
 export const openingHours: HoursEntry[] = [
-  { day: "Monday", shortDay: "Mon", time: "9:00 am – 6:00 pm" },
-  { day: "Tuesday", shortDay: "Tue", time: "9:00 am – 6:00 pm" },
-  { day: "Wednesday", shortDay: "Wed", time: "9:00 am – 6:00 pm" },
-  { day: "Thursday", shortDay: "Thu", time: "9:00 am – 6:00 pm" },
-  { day: "Friday", shortDay: "Fri", time: "9:00 am – 6:00 pm" },
-  { day: "Saturday", shortDay: "Sat", time: "9:00 am – 6:00 pm" },
-  { day: "Sunday", shortDay: "Sun", time: "Closed" },
+  { day: "Saturday", shortDay: "Sat", time: "9:00 am - 6:00 pm" },
+  { day: "Sunday", shortDay: "Sun", time: "9:00 am - 6:00 pm" },
 ];
 
 const dayToShortDay = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function getTodaysHours(date = new Date()): HoursEntry {
   const today = dayToShortDay[date.getDay()];
-  return openingHours.find((e) => e.shortDay === today) ?? openingHours[0];
+  return (
+    openingHours.find((e) => e.shortDay === today) ?? {
+      day: "Weekends",
+      shortDay: "Sat",
+      time: "9:00 am - 6:00 pm",
+    }
+  );
 }
-
-// ─── Contact cards ────────────────────────────────────────────────────────────
 
 export type ContactCard = {
   icon: LucideIcon;
@@ -221,17 +187,13 @@ export function getContactCards(): ContactCard[] {
     {
       icon: MapPin,
       title: "Service area",
-      content: "Roscommon & Longford\nMobile — we come to you",
-      href: `https://maps.google.com/?q=Strokestown+Roscommon+Ireland`,
+      content: "Roscommon & Longford\nMobile - we come to you",
+      href: "https://maps.google.com/?q=Strokestown+Roscommon+Ireland",
       cta: "Get directions",
       external: true,
     },
   ];
 }
-
-// ─── Before/after gallery (placeholders) ─────────────────────────────────────
-//
-// Replace these with real before/after shots once Jake provides photos.
 
 export type BeforeAfterPair = {
   before: { src: string; alt: string };
@@ -242,24 +204,24 @@ export type BeforeAfterPair = {
 export const beforeAfterGallery: BeforeAfterPair[] = [
   {
     before: {
-      src: "https://images.unsplash.com/photo-1558981852-426c349548ab?auto=format&fit=crop&w=800&q=80",
-      alt: "Dirty car exterior before valeting",
+      src: "/images/IMG_5927-optimized.jpg",
+      alt: "Van interior before valeting",
     },
     after: {
-      src: "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=800&q=80",
-      alt: "Gleaming car exterior after full valet",
+      src: "/images/IMG_5935-optimized.jpg",
+      alt: "Van interior after valeting",
     },
-    label: "Full Exterior Valet",
+    label: "Cabin Deep Clean",
   },
   {
     before: {
-      src: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80",
-      alt: "Car interior before deep clean",
+      src: "/images/IMG_8069-optimized.jpg",
+      alt: "Vehicle interior before clean",
     },
     after: {
-      src: "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=800&q=80",
-      alt: "Clean car interior after valet",
+      src: "/images/IMG_8082-optimized.jpg",
+      alt: "Vehicle interior after clean",
     },
-    label: "Interior Deep Clean",
+    label: "Interior Transformation",
   },
 ];
