@@ -206,7 +206,7 @@ export default function Home() {
                   <div className="col-span-2 overflow-hidden rounded-2xl border border-border">
                     <div className="relative h-48">
                       <Image
-                        src="/images/D593888A-A407-4D5F-893B-5A8BE28B9977.jpeg"
+                        src="/images/service-area.png"
                         alt="Jake's Car Care mobile valeting service area"
                         fill
                         className="object-cover"
