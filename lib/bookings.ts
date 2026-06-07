@@ -188,3 +188,107 @@ export async function submitBooking(
     });
   });
 }
+
+// ─── Flowpoint (Hub) submission + availability ─────────────────────────────────
+
+const FLOWPOINT_API = "https://hub.flowpointstudios.ie";
+const FLOWPOINT_TOKEN = "fp_site_jakescarcare_0a36a4fd88c3";
+
+// Build an ISO instant for a Europe/Dublin wall-clock date + time (handles IST/GMT),
+// so the Hub stores the slot at the correct local time regardless of device zone.
+function toDublinISO(dateStr: string, time: string): string {
+  const guess = new Date(`${dateStr}T${time}:00Z`);
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Dublin", hour12: false,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+  })
+    .formatToParts(guess)
+    .reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {} as Record<string, string>);
+  const asUTC = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);
+  const offsetMin = (asUTC - guess.getTime()) / 60000;
+  return new Date(guess.getTime() - offsetMin * 60000).toISOString();
+}
+
+// Add-on display name → Hub add-on id, fetched once from booking-config.
+let addonIdCache: Record<string, string> | null = null;
+async function getFlowpointAddonIds(): Promise<Record<string, string>> {
+  if (addonIdCache) return addonIdCache;
+  try {
+    const res = await fetch(`${FLOWPOINT_API}/api/public/booking-config?token=${FLOWPOINT_TOKEN}`);
+    if (!res.ok) return {};
+    const data = await res.json();
+    const map: Record<string, string> = {};
+    for (const a of data.addons ?? []) map[a.name] = a.id;
+    addonIdCache = map;
+    return map;
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Which of AVAILABLE_TIMES are taken for a date, per the Hub. Two-slot model:
+ * a slot is unavailable only if the Hub already has a booking at that start.
+ */
+export async function getFlowpointBlockedTimes(dateStr: string, service: string): Promise<string[]> {
+  if (!dateStr || !service) return [];
+  try {
+    const url =
+      `${FLOWPOINT_API}/api/public/slots?token=${encodeURIComponent(FLOWPOINT_TOKEN)}` +
+      `&service=${encodeURIComponent(service)}&date=${encodeURIComponent(dateStr)}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    const open = new Set<string>((data.slots ?? []).map((s: string) => String(s).slice(0, 5)));
+    return AVAILABLE_TIMES.filter((t) => !open.has(t));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Submits a booking to the Flowpoint Hub using its first-class fields: add-ons
+ * (by id), the Eircode custom field, and notes. The Hub owns the record, runs
+ * conflict/capacity checks, and sends the customer + owner emails.
+ */
+export async function submitToFlowpoint(data: BookingData): Promise<void> {
+  const startISO = toDublinISO(data.date, data.time);
+
+  const addonIds = await getFlowpointAddonIds();
+  const addons = [
+    data.ironFalloutAddon ? addonIds["Iron Fallout & Tar Remover"] : null,
+    data.protectorWaxAddon ? addonIds["Protector Wax"] : null,
+  ].filter((id): id is string => Boolean(id));
+
+  const res = await fetch(`${FLOWPOINT_API}/api/public/bookings`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-flowpoint-site-token": FLOWPOINT_TOKEN,
+    },
+    body: JSON.stringify({
+      customerName: data.name,
+      customerEmail: data.email || undefined,
+      customerPhone: data.phone || undefined,
+      serviceName: data.service,
+      startTime: startISO,
+      notes: data.message || undefined,
+      addons,
+      customFields: data.eircode ? { eircode: data.eircode } : {},
+    }),
+  });
+
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    if (body?.code === "SLOT_FULL") {
+      throw new Error(
+        "That time slot is fully booked. Please pick another time or date."
+      );
+    }
+    throw new Error(
+      body?.error ||
+        "Couldn't submit your booking. Please try again or call 087 766 5058."
+    );
+  }
+}

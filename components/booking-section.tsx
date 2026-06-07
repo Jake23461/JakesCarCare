@@ -27,9 +27,19 @@ import {
   toLocalDateString,
   getTomorrowDateString,
   getBlockedTimesForDate,
+  getFlowpointBlockedTimes,
   submitBooking,
+  submitToFlowpoint,
   type BookingData,
 } from "@/lib/bookings";
+
+// Backend toggle. Set NEXT_PUBLIC_BOOKING_PROVIDER to "legacy" | "flowpoint".
+// The visible form UI is identical for both — only the submission target changes.
+//   flowpoint -> POSTs to Flowpoint hub (default)
+//   legacy    -> writes to Firestore + triggers existing Cloud Function
+const BOOKING_PROVIDER: "legacy" | "flowpoint" =
+  (process.env.NEXT_PUBLIC_BOOKING_PROVIDER as "legacy" | "flowpoint" | undefined) ??
+  "flowpoint";
 
 // ─── DatePicker custom trigger ───────────────────────────────────────────────
 
@@ -106,15 +116,19 @@ export function BookingSection() {
   const set = <K extends keyof BookingData>(k: K, v: BookingData[K]) =>
     setForm((prev) => ({ ...prev, [k]: v }));
 
-  // ── Fetch blocked slots whenever date changes ─────────────────────────────
-  const refreshBlocked = useCallback(async (dateStr: string) => {
+  // ── Fetch blocked slots whenever date/service changes ─────────────────────
+  // Availability comes from the Hub (flowpoint) or Firestore (legacy).
+  const refreshBlocked = useCallback(async (dateStr: string, service: string) => {
     if (!dateStr) {
       setBlockedTimes([]);
       return;
     }
     setLoadingTimes(true);
     try {
-      const blocked = await getBlockedTimesForDate(db, dateStr);
+      const blocked =
+        BOOKING_PROVIDER === "flowpoint"
+          ? await getFlowpointBlockedTimes(dateStr, service)
+          : await getBlockedTimesForDate(db, dateStr);
       setBlockedTimes(blocked);
     } catch {
       setBlockedTimes([]);
@@ -126,10 +140,10 @@ export function BookingSection() {
   // Initial load + 15-second refresh
   useEffect(() => {
     if (!form.date) return;
-    refreshBlocked(form.date);
-    const id = setInterval(() => refreshBlocked(form.date), 15_000);
+    refreshBlocked(form.date, form.service);
+    const id = setInterval(() => refreshBlocked(form.date, form.service), 15_000);
     return () => clearInterval(id);
-  }, [form.date, refreshBlocked]);
+  }, [form.date, form.service, refreshBlocked]);
 
   // ── Date handling ─────────────────────────────────────────────────────────
   const handleDateSelect = (date: Date | null) => {
@@ -179,7 +193,11 @@ export function BookingSection() {
     setSubmitting(true);
     setError("");
     try {
-      await submitBooking(db, form);
+      if (BOOKING_PROVIDER === "flowpoint") {
+        await submitToFlowpoint(form);
+      } else {
+        await submitBooking(db, form);
+      }
       setSuccess(true);
       setForm(EMPTY);
       setBlockedTimes([]);
@@ -569,3 +587,4 @@ export function BookingSection() {
     </div>
   );
 }
+
