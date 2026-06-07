@@ -80,9 +80,9 @@ const FIELD_ICONS: Record<string, LucideIcon> = { eircode: MapPin };
 // Used until the Hub responds (or if it's unreachable) so the form always renders.
 const FALLBACK_CONFIG: FlowpointConfig = {
   services: [
-    { id: "Full Valet", name: "Full Valet", durationMinutes: 240, priceCents: 0 },
-    { id: "Exterior Only", name: "Exterior Only", durationMinutes: 120, priceCents: 0 },
-    { id: "Interior Only", name: "Interior Only", durationMinutes: 180, priceCents: 0 },
+    { id: "Full Valet", name: "Full Valet", description: "", durationMinutes: 240, priceCents: 0 },
+    { id: "Exterior Only", name: "Exterior Only", description: "", durationMinutes: 120, priceCents: 0 },
+    { id: "Interior Only", name: "Interior Only", description: "", durationMinutes: 180, priceCents: 0 },
   ],
   addons: [],
   customFields: [
@@ -331,7 +331,8 @@ export function BookingSection() {
                   const pres = SERVICE_PRESENTATION[svc.name];
                   const Icon = pres?.icon ?? Car;
                   const label = svc.name;
-                  const desc = pres?.desc ?? "";
+                  // Prefer the Hub description; fall back to the site's copy.
+                  const desc = svc.description || pres?.desc || "";
                   const tag = durationTag(svc.durationMinutes);
                   const price =
                     pres?.price ?? (svc.priceCents ? `€${(svc.priceCents / 100).toFixed(0)}` : "");

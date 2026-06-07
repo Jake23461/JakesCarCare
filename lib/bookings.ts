@@ -52,6 +52,7 @@ export interface BookingData {
 export interface FlowpointService {
   id: string;
   name: string;
+  description: string;
   durationMinutes: number;
   priceCents: number;
   depositCents?: number;
@@ -257,6 +258,7 @@ export async function getFlowpointConfig(): Promise<FlowpointConfig | null> {
       services: (data.services ?? []).map((s: Record<string, unknown>) => ({
         id: String(s.id),
         name: String(s.name),
+        description: String(s.description ?? ""),
         durationMinutes: Number(s.durationMinutes ?? s.duration ?? 0),
         priceCents: Number(s.priceCents ?? 0),
         depositCents: Number(s.depositCents ?? 0),
