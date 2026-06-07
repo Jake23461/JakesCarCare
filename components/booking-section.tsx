@@ -27,7 +27,8 @@ import {
   toLocalDateString,
   getTomorrowDateString,
   getBlockedTimesForDate,
-  getFlowpointBlockedTimes,
+  getFlowpointConfiguredSlots,
+  getFlowpointOpenSlots,
   submitBooking,
   submitToFlowpoint,
   type BookingData,
@@ -106,7 +107,10 @@ const EMPTY: BookingData = {
 
 export function BookingSection() {
   const [form, setForm] = useState<BookingData>(EMPTY);
-  const [blockedTimes, setBlockedTimes] = useState<string[]>([]);
+  // Slot buttons to show — Hub-configured (falls back to the built-in two slots).
+  const [configuredSlots, setConfiguredSlots] = useState<string[]>([...AVAILABLE_TIMES]);
+  // Which of those are still open for the chosen date/service (from the Hub).
+  const [openSlots, setOpenSlots] = useState<string[]>([]);
   const [loadingTimes, setLoadingTimes] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -116,22 +120,33 @@ export function BookingSection() {
   const set = <K extends keyof BookingData>(k: K, v: BookingData[K]) =>
     setForm((prev) => ({ ...prev, [k]: v }));
 
-  // ── Fetch blocked slots whenever date/service changes ─────────────────────
+  // ── Load the Hub's configured slot times once (e.g. 09:00 / 13:00) ─────────
+  useEffect(() => {
+    if (BOOKING_PROVIDER !== "flowpoint") return;
+    let active = true;
+    getFlowpointConfiguredSlots().then((times) => {
+      if (active && times.length) setConfiguredSlots(times);
+    });
+    return () => { active = false; };
+  }, []);
+
+  // ── Fetch open slots whenever date/service changes ────────────────────────
   // Availability comes from the Hub (flowpoint) or Firestore (legacy).
-  const refreshBlocked = useCallback(async (dateStr: string, service: string) => {
+  const refreshOpen = useCallback(async (dateStr: string, service: string, slots: string[]) => {
     if (!dateStr) {
-      setBlockedTimes([]);
+      setOpenSlots([]);
       return;
     }
     setLoadingTimes(true);
     try {
-      const blocked =
-        BOOKING_PROVIDER === "flowpoint"
-          ? await getFlowpointBlockedTimes(dateStr, service)
-          : await getBlockedTimesForDate(db, dateStr);
-      setBlockedTimes(blocked);
+      if (BOOKING_PROVIDER === "flowpoint") {
+        setOpenSlots(await getFlowpointOpenSlots(dateStr, service));
+      } else {
+        const blocked = await getBlockedTimesForDate(db, dateStr);
+        setOpenSlots(slots.filter((s) => !blocked.includes(s)));
+      }
     } catch {
-      setBlockedTimes([]);
+      setOpenSlots([]);
     } finally {
       setLoadingTimes(false);
     }
@@ -140,10 +155,10 @@ export function BookingSection() {
   // Initial load + 15-second refresh
   useEffect(() => {
     if (!form.date) return;
-    refreshBlocked(form.date, form.service);
-    const id = setInterval(() => refreshBlocked(form.date, form.service), 15_000);
+    refreshOpen(form.date, form.service, configuredSlots);
+    const id = setInterval(() => refreshOpen(form.date, form.service, configuredSlots), 15_000);
     return () => clearInterval(id);
-  }, [form.date, form.service, refreshBlocked]);
+  }, [form.date, form.service, configuredSlots, refreshOpen]);
 
   // ── Date handling ─────────────────────────────────────────────────────────
   const handleDateSelect = (date: Date | null) => {
@@ -200,7 +215,7 @@ export function BookingSection() {
       }
       setSuccess(true);
       setForm(EMPTY);
-      setBlockedTimes([]);
+      setOpenSlots([]);
     } catch (err: unknown) {
       setError(
         err instanceof Error
@@ -430,8 +445,8 @@ export function BookingSection() {
 
                 {/* Time slots */}
                 <div className="flex gap-2">
-                  {AVAILABLE_TIMES.map((slot) => {
-                    const isBlocked = blockedTimes.includes(slot);
+                  {configuredSlots.map((slot) => {
+                    const isBlocked = !!form.date && !openSlots.includes(slot);
                     const active = form.time === slot;
                     return (
                       <button

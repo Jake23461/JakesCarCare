@@ -230,8 +230,49 @@ async function getFlowpointAddonIds(): Promise<Record<string, string>> {
 /**
  * Which of AVAILABLE_TIMES are taken for a date, per the Hub. Two-slot model:
  * a slot is unavailable only if the Hub already has a booking at that start.
+ * (Kept for the legacy fallback path.)
  */
 export async function getFlowpointBlockedTimes(dateStr: string, service: string): Promise<string[]> {
+  if (!dateStr || !service) return [];
+  try {
+    const open = new Set(await getFlowpointOpenSlots(dateStr, service));
+    return AVAILABLE_TIMES.filter((t) => !open.has(t));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * The bookable start times the Hub has CONFIGURED for this business (e.g. its
+ * fixed 09:00/13:00). Used to render the slot buttons, so changing the slot
+ * config in the Hub flows through to the site with no code change. Falls back to
+ * the built-in two-slot list if the Hub is unreachable or set to interval mode.
+ */
+let configuredSlotsCache: string[] | null = null;
+export async function getFlowpointConfiguredSlots(): Promise<string[]> {
+  if (configuredSlotsCache) return configuredSlotsCache;
+  try {
+    const res = await fetch(
+      `${FLOWPOINT_API}/api/public/availability?token=${encodeURIComponent(FLOWPOINT_TOKEN)}`
+    );
+    if (!res.ok) return [...AVAILABLE_TIMES];
+    const data = await res.json();
+    const times: string[] = Array.isArray(data.fixedTimes)
+      ? data.fixedTimes.map((t: string) => String(t).slice(0, 5))
+      : [];
+    const result = times.length ? times.sort() : [...AVAILABLE_TIMES];
+    configuredSlotsCache = result;
+    return result;
+  } catch {
+    return [...AVAILABLE_TIMES];
+  }
+}
+
+/**
+ * The OPEN (still-bookable) start times for a given date + service, straight from
+ * the Hub — already accounts for hours, existing bookings, capacity and blocks.
+ */
+export async function getFlowpointOpenSlots(dateStr: string, service: string): Promise<string[]> {
   if (!dateStr || !service) return [];
   try {
     const url =
@@ -240,8 +281,7 @@ export async function getFlowpointBlockedTimes(dateStr: string, service: string)
     const res = await fetch(url);
     if (!res.ok) return [];
     const data = await res.json();
-    const open = new Set<string>((data.slots ?? []).map((s: string) => String(s).slice(0, 5)));
-    return AVAILABLE_TIMES.filter((t) => !open.has(t));
+    return (data.slots ?? []).map((s: string) => String(s).slice(0, 5));
   } catch {
     return [];
   }
