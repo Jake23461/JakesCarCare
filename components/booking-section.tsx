@@ -18,10 +18,9 @@ import {
   AlertCircle,
   Plus,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { db } from "@/lib/firebase";
 import {
-  SERVICES,
-  SERVICE_DURATIONS,
   AVAILABLE_TIMES,
   isWeekend,
   toLocalDateString,
@@ -29,9 +28,11 @@ import {
   getBlockedTimesForDate,
   getFlowpointConfiguredSlots,
   getFlowpointOpenSlots,
+  getFlowpointConfig,
   submitBooking,
   submitToFlowpoint,
   type BookingData,
+  type FlowpointConfig,
 } from "@/lib/bookings";
 
 // Backend toggle. Set NEXT_PUBLIC_BOOKING_PROVIDER to "legacy" | "flowpoint".
@@ -59,34 +60,44 @@ const DateTrigger = forwardRef<
 ));
 DateTrigger.displayName = "DateTrigger";
 
-// ─── Service card config ──────────────────────────────────────────────────────
+// ─── Presentation (site-owned look), keyed by canonical Hub name ───────────────
+// The Hub decides WHICH services/add-ons/fields exist; the site decides how they
+// LOOK. Items not listed here fall back to a default icon + the Hub's own values.
 
-const SERVICE_CONFIG = [
-  {
-    id: "Full Valet",
-    icon: Car,
-    label: "Full Valet",
-    desc: "Complete inside-and-out transformation",
-    tag: `${SERVICE_DURATIONS["Full Valet"]}hrs`,
-    price: "€100–€120",
-  },
-  {
-    id: "Exterior Only",
-    icon: Droplets,
-    label: "Exterior Only",
-    desc: "Full exterior foam wash, rinse, hand dry",
-    tag: `${SERVICE_DURATIONS["Exterior Only"]}hrs`,
-    price: "€50",
-  },
-  {
-    id: "Interior Only",
-    icon: Sparkles,
-    label: "Interior Only",
-    desc: "Deep vacuum, trim clean, glass, steam",
-    tag: `${SERVICE_DURATIONS["Interior Only"]}hrs`,
-    price: "€70–€90",
-  },
-] as const;
+const SERVICE_PRESENTATION: Record<string, { icon: LucideIcon; desc: string; price: string }> = {
+  "Full Valet": { icon: Car, desc: "Complete inside-and-out transformation", price: "€100–€120" },
+  "Exterior Only": { icon: Droplets, desc: "Full exterior foam wash, rinse, hand dry", price: "€50" },
+  "Interior Only": { icon: Sparkles, desc: "Deep vacuum, trim clean, glass, steam", price: "€70–€90" },
+};
+
+const ADDON_PRESENTATION: Record<string, string> = {
+  "Iron Fallout & Tar Remover": "Decontaminates paintwork before wash",
+  "Protector Wax": "Long-lasting paint protection applied after wash",
+};
+
+const FIELD_ICONS: Record<string, LucideIcon> = { eircode: MapPin };
+
+// Used until the Hub responds (or if it's unreachable) so the form always renders.
+const FALLBACK_CONFIG: FlowpointConfig = {
+  services: [
+    { id: "Full Valet", name: "Full Valet", durationMinutes: 240, priceCents: 0 },
+    { id: "Exterior Only", name: "Exterior Only", durationMinutes: 120, priceCents: 0 },
+    { id: "Interior Only", name: "Interior Only", durationMinutes: 180, priceCents: 0 },
+  ],
+  addons: [],
+  customFields: [
+    { id: "eircode", fieldKey: "eircode", label: "Eircode", fieldType: "text", required: true, options: [] },
+  ],
+};
+
+function durationTag(minutes: number): string {
+  if (!minutes) return "";
+  return minutes % 60 === 0 ? `${minutes / 60}hrs` : `${minutes}min`;
+}
+
+function inputType(fieldType: string): string {
+  return fieldType === "tel" || fieldType === "email" || fieldType === "number" ? fieldType : "text";
+}
 
 // ─── Empty form state ─────────────────────────────────────────────────────────
 
@@ -101,12 +112,17 @@ const EMPTY: BookingData = {
   message: "",
   ironFalloutAddon: false,
   protectorWaxAddon: false,
+  addonIds: [],
+  customFields: {},
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function BookingSection() {
   const [form, setForm] = useState<BookingData>(EMPTY);
+  // Hub catalogue (services / add-ons / custom fields). Starts with the fallback
+  // so the form renders instantly, then reconciles with the live Hub config.
+  const [config, setConfig] = useState<FlowpointConfig>(FALLBACK_CONFIG);
   // Slot buttons to show — Hub-configured (falls back to the built-in two slots).
   const [configuredSlots, setConfiguredSlots] = useState<string[]>([...AVAILABLE_TIMES]);
   // Which of those are still open for the chosen date/service (from the Hub).
@@ -129,6 +145,28 @@ export function BookingSection() {
     });
     return () => { active = false; };
   }, []);
+
+  // ── Load the Hub's services / add-ons / custom fields once ─────────────────
+  useEffect(() => {
+    if (BOOKING_PROVIDER !== "flowpoint") return;
+    let active = true;
+    getFlowpointConfig().then((c) => {
+      if (active && c && c.services.length) setConfig(c);
+    });
+    return () => { active = false; };
+  }, []);
+
+  const setCustomField = (key: string, value: string) =>
+    setForm((prev) => ({ ...prev, customFields: { ...(prev.customFields ?? {}), [key]: value } }));
+
+  const toggleAddon = (id: string) =>
+    setForm((prev) => {
+      const current = prev.addonIds ?? [];
+      return {
+        ...prev,
+        addonIds: current.includes(id) ? current.filter((x) => x !== id) : [...current, id],
+      };
+    });
 
   // ── Fetch open slots whenever date/service changes ────────────────────────
   // Availability comes from the Hub (flowpoint) or Firestore (legacy).
@@ -173,11 +211,19 @@ export function BookingSection() {
     set("time", "");
   };
 
-  // ── Add-on visibility ─────────────────────────────────────────────────────
-  const showAddons =
-    form.service === "Full Valet" || form.service === "Exterior Only";
+  // ── Hub-driven catalogue for the chosen service ───────────────────────────
+  const selectedService = config.services.find((s) => s.name === form.service);
+  const applicableAddons = config.addons.filter(
+    (a) =>
+      a.appliesToServiceIds.length === 0 ||
+      (selectedService ? a.appliesToServiceIds.includes(selectedService.id) : false)
+  );
+  const showAddons = !!form.service && applicableAddons.length > 0;
 
-  // ── Validation ────────────────────────────────────────────────────────────
+  // ── Validation: core fields + every required Hub custom field ─────────────
+  const requiredFieldsFilled = config.customFields.every(
+    (f) => !f.required || !!(form.customFields?.[f.fieldKey] ?? "").trim()
+  );
   const isComplete =
     !!form.service &&
     !!form.date &&
@@ -185,7 +231,7 @@ export function BookingSection() {
     !!form.name &&
     !!form.phone &&
     !!form.email &&
-    !!form.eircode;
+    requiredFieldsFilled;
 
   // ── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
@@ -281,20 +327,23 @@ export function BookingSection() {
                 Choose a service
               </legend>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                {SERVICE_CONFIG.map(({ id, icon: Icon, label, desc, tag, price }) => {
-                  const active = form.service === id;
+                {config.services.map((svc) => {
+                  const pres = SERVICE_PRESENTATION[svc.name];
+                  const Icon = pres?.icon ?? Car;
+                  const label = svc.name;
+                  const desc = pres?.desc ?? "";
+                  const tag = durationTag(svc.durationMinutes);
+                  const price =
+                    pres?.price ?? (svc.priceCents ? `€${(svc.priceCents / 100).toFixed(0)}` : "");
+                  const active = form.service === svc.name;
                   return (
                     <button
-                      key={id}
+                      key={svc.id}
                       type="button"
                       onClick={() => {
-                        set("service", id);
+                        set("service", svc.name);
                         set("time", ""); // reset time when service changes
-                        // clear add-ons if service doesn't support them
-                        if (id === "Interior Only") {
-                          set("ironFalloutAddon", false);
-                          set("protectorWaxAddon", false);
-                        }
+                        set("addonIds", []); // reset extras — they may differ per service
                       }}
                       className={`flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition ${
                         active
@@ -347,26 +396,16 @@ export function BookingSection() {
                     </span>
                   </legend>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {[
-                      {
-                        key: "ironFalloutAddon" as const,
-                        label: "Iron Fallout & Tar Remover",
-                        desc: "Decontaminates paintwork before wash",
-                        price: "+€20",
-                      },
-                      {
-                        key: "protectorWaxAddon" as const,
-                        label: "Protector Wax",
-                        desc: "Long-lasting paint protection applied after wash",
-                        price: "+€25",
-                      },
-                    ].map(({ key, label, desc, price }) => {
-                      const active = form[key];
+                    {applicableAddons.map((addon) => {
+                      const label = addon.name;
+                      const desc = ADDON_PRESENTATION[addon.name] ?? "";
+                      const price = addon.priceCents ? `+€${(addon.priceCents / 100).toFixed(0)}` : "";
+                      const active = (form.addonIds ?? []).includes(addon.id);
                       return (
                         <button
-                          key={key}
+                          key={addon.id}
                           type="button"
-                          onClick={() => set(key, !active)}
+                          onClick={() => toggleAddon(addon.id)}
                           className={`flex items-start gap-3 rounded-xl border p-4 text-left transition ${
                             active
                               ? "border-accent bg-accent/10"
@@ -528,18 +567,40 @@ export function BookingSection() {
                     className="h-12 w-full rounded-xl border border-border bg-surface pl-10 pr-4 text-sm text-foreground placeholder:text-foreground-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
                   />
                 </div>
-                {/* Eircode */}
-                <div className="relative">
-                  <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" />
-                  <input
-                    type="text"
-                    placeholder="Eircode (e.g. F42 AB12)"
-                    value={form.eircode}
-                    onChange={(e) => set("eircode", e.target.value)}
-                    required
-                    className="h-12 w-full rounded-xl border border-border bg-surface pl-10 pr-4 text-sm text-foreground placeholder:text-foreground-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-                  />
-                </div>
+                {/* Hub-configured custom fields (e.g. Eircode) */}
+                {config.customFields.map((field) => {
+                  const Icon = FIELD_ICONS[field.fieldKey] ?? MapPin;
+                  const value = form.customFields?.[field.fieldKey] ?? "";
+                  const placeholder =
+                    field.fieldKey === "eircode" ? "Eircode (e.g. F42 AB12)" : field.label;
+                  return (
+                    <div key={field.id} className="relative">
+                      <Icon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted z-10" />
+                      {field.fieldType === "select" ? (
+                        <select
+                          value={value}
+                          onChange={(e) => setCustomField(field.fieldKey, e.target.value)}
+                          required={field.required}
+                          className="h-12 w-full appearance-none rounded-xl border border-border bg-surface pl-10 pr-4 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                        >
+                          <option value="">{field.label}{field.required ? "" : " (optional)"}</option>
+                          {field.options.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type={inputType(field.fieldType)}
+                          placeholder={placeholder + (field.required ? "" : " (optional)")}
+                          value={value}
+                          onChange={(e) => setCustomField(field.fieldKey, e.target.value)}
+                          required={field.required}
+                          className="h-12 w-full rounded-xl border border-border bg-surface pl-10 pr-4 text-sm text-foreground placeholder:text-foreground-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
               {/* Message */}
               <div className="mt-3">

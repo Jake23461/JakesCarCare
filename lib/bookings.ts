@@ -39,9 +39,42 @@ export interface BookingData {
   message: string;
   ironFalloutAddon: boolean;
   protectorWaxAddon: boolean;
+  // Hub-driven dynamic selections (the flowpoint path uses these):
+  addonIds?: string[];
+  customFields?: Record<string, string>;
   adminCreated?: boolean;
   price?: string;
   completed?: boolean;
+}
+
+// ─── Hub booking-config (services / add-ons / custom fields) ───────────────────
+
+export interface FlowpointService {
+  id: string;
+  name: string;
+  durationMinutes: number;
+  priceCents: number;
+  depositCents?: number;
+}
+export interface FlowpointAddon {
+  id: string;
+  name: string;
+  priceCents: number;
+  durationMinutes: number;
+  appliesToServiceIds: string[];
+}
+export interface FlowpointCustomField {
+  id: string;
+  fieldKey: string;
+  label: string;
+  fieldType: string;
+  required: boolean;
+  options: string[];
+}
+export interface FlowpointConfig {
+  services: FlowpointService[];
+  addons: FlowpointAddon[];
+  customFields: FlowpointCustomField[];
 }
 
 export interface Booking extends BookingData {
@@ -210,20 +243,43 @@ function toDublinISO(dateStr: string, time: string): string {
   return new Date(guess.getTime() - offsetMin * 60000).toISOString();
 }
 
-// Add-on display name → Hub add-on id, fetched once from booking-config.
-let addonIdCache: Record<string, string> | null = null;
-async function getFlowpointAddonIds(): Promise<Record<string, string>> {
-  if (addonIdCache) return addonIdCache;
+// Full booking catalogue from the Hub (services, add-ons, custom fields), fetched
+// once and cached. This is what makes the bespoke UI Hub-driven: the site decides
+// how each item LOOKS, the Hub decides which items EXIST.
+let configCache: FlowpointConfig | null = null;
+export async function getFlowpointConfig(): Promise<FlowpointConfig | null> {
+  if (configCache) return configCache;
   try {
-    const res = await fetch(`${FLOWPOINT_API}/api/public/booking-config?token=${FLOWPOINT_TOKEN}`);
-    if (!res.ok) return {};
+    const res = await fetch(`${FLOWPOINT_API}/api/public/booking-config?token=${encodeURIComponent(FLOWPOINT_TOKEN)}`);
+    if (!res.ok) return null;
     const data = await res.json();
-    const map: Record<string, string> = {};
-    for (const a of data.addons ?? []) map[a.name] = a.id;
-    addonIdCache = map;
-    return map;
+    configCache = {
+      services: (data.services ?? []).map((s: Record<string, unknown>) => ({
+        id: String(s.id),
+        name: String(s.name),
+        durationMinutes: Number(s.durationMinutes ?? s.duration ?? 0),
+        priceCents: Number(s.priceCents ?? 0),
+        depositCents: Number(s.depositCents ?? 0),
+      })),
+      addons: (data.addons ?? []).map((a: Record<string, unknown>) => ({
+        id: String(a.id),
+        name: String(a.name),
+        priceCents: Number(a.priceCents ?? 0),
+        durationMinutes: Number(a.durationMinutes ?? 0),
+        appliesToServiceIds: Array.isArray(a.appliesToServiceIds) ? a.appliesToServiceIds.map(String) : [],
+      })),
+      customFields: (data.customFields ?? []).map((f: Record<string, unknown>) => ({
+        id: String(f.id),
+        fieldKey: String(f.fieldKey),
+        label: String(f.label),
+        fieldType: String(f.fieldType ?? "text"),
+        required: Boolean(f.required),
+        options: Array.isArray(f.options) ? f.options.map(String) : [],
+      })),
+    };
+    return configCache;
   } catch {
-    return {};
+    return null;
   }
 }
 
@@ -295,11 +351,13 @@ export async function getFlowpointOpenSlots(dateStr: string, service: string): P
 export async function submitToFlowpoint(data: BookingData): Promise<void> {
   const startISO = toDublinISO(data.date, data.time);
 
-  const addonIds = await getFlowpointAddonIds();
-  const addons = [
-    data.ironFalloutAddon ? addonIds["Iron Fallout & Tar Remover"] : null,
-    data.protectorWaxAddon ? addonIds["Protector Wax"] : null,
-  ].filter((id): id is string => Boolean(id));
+  const addons = Array.isArray(data.addonIds) ? data.addonIds : [];
+  const customFields =
+    data.customFields && typeof data.customFields === "object"
+      ? data.customFields
+      : data.eircode
+        ? { eircode: data.eircode }
+        : {};
 
   const res = await fetch(`${FLOWPOINT_API}/api/public/bookings`, {
     method: "POST",
@@ -315,7 +373,7 @@ export async function submitToFlowpoint(data: BookingData): Promise<void> {
       startTime: startISO,
       notes: data.message || undefined,
       addons,
-      customFields: data.eircode ? { eircode: data.eircode } : {},
+      customFields,
     }),
   });
 
