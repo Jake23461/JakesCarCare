@@ -55,6 +55,7 @@ export interface FlowpointService {
   description: string;
   durationMinutes: number;
   priceCents: number;
+  priceLabel: string;
   depositCents?: number;
 }
 export interface FlowpointAddon {
@@ -261,6 +262,7 @@ export async function getFlowpointConfig(): Promise<FlowpointConfig | null> {
         description: String(s.description ?? ""),
         durationMinutes: Number(s.durationMinutes ?? s.duration ?? 0),
         priceCents: Number(s.priceCents ?? 0),
+        priceLabel: String(s.priceLabel ?? ""),
         depositCents: Number(s.depositCents ?? 0),
       })),
       addons: (data.addons ?? []).map((a: Record<string, unknown>) => ({
