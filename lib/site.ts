@@ -20,8 +20,7 @@ export const heroMedia = {
   mediaSrc:
     "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=1920&q=80",
   posterSrc: "/images/jakes-car-care-poster.jpg",
-  bgImageSrc:
-    "https://images.unsplash.com/photo-1558981852-426c349548ab?auto=format&fit=crop&w=1920&q=80",
+  bgImageSrc: "", // solid black hero background (no hot-linked stock image)
   fallbackImageSrc:
     "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=1920&q=80",
 };

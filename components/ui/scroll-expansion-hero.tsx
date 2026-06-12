@@ -23,8 +23,9 @@ export interface ScrollExpandHeroProps {
   mediaSrc: string;
   /** Poster image for video (shown while loading) */
   posterSrc?: string;
-  /** Full-screen background image — the "dirty" before state */
-  bgImageSrc: string;
+  /** Full-screen background image — the "dirty" before state. Omit/empty for a
+   *  solid black background. */
+  bgImageSrc?: string;
   /** First line of the splitting headline (shown during scroll animation) */
   titleLine1: string;
   /** Second line of the splitting headline */
@@ -166,19 +167,24 @@ export function ScrollExpandHero({
         className="relative w-full overflow-hidden"
         style={{ height: "100dvh", minHeight: "100dvh" }}
       >
-        {/* Dirty background — fades to black as media expands */}
+        {/* Background — a client photo (the "dirty before"), or solid black when
+            no image is provided. Fades to black as the media expands. */}
         <div
-          className="absolute inset-0 z-0"
+          className="absolute inset-0 z-0 bg-black"
           style={{ opacity: bgOpacity, transition: "none" }}
         >
-          <Image
-            src={bgImageSrc}
-            alt="Before valeting"
-            fill
-            className="object-cover object-center"
-            priority
-          />
-          <div className="absolute inset-0 bg-black/55" />
+          {bgImageSrc && (
+            <>
+              <Image
+                src={bgImageSrc}
+                alt=""
+                fill
+                className="object-cover object-center"
+                priority
+              />
+              <div className="absolute inset-0 bg-black/55" />
+            </>
+          )}
         </div>
 
         {/* Expanding clean-car media */}
