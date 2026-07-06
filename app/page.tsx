@@ -250,6 +250,46 @@ export default function Home() {
                   + surrounding areas
                 </span>
               </div>
+
+              {/* Travel / call-out fee explainer */}
+              <div className="mx-auto mt-10 grid max-w-3xl gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-border bg-surface-raised p-5 text-center">
+                  <div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-green-500/10">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <p className="text-sm font-bold text-foreground">
+                    Free travel zone
+                  </p>
+                  <p className="mt-1 text-xs text-foreground-muted">
+                    No call-out fee within ~15 minutes of Strokestown
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border bg-surface-raised p-5 text-center">
+                  <div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-accent/10">
+                    <MapPin className="h-4 w-4 text-accent" />
+                  </div>
+                  <p className="text-sm font-bold text-foreground">
+                    Further out?
+                  </p>
+                  <p className="mt-1 text-xs text-foreground-muted">
+                    A small call-out fee is added — enter your Eircode when
+                    booking and see it instantly on a map
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border bg-surface-raised p-5 text-center">
+                  <div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-accent/10">
+                    <Phone className="h-4 w-4 text-accent" />
+                  </div>
+                  <p className="text-sm font-bold text-foreground">
+                    Up to 45 km out
+                  </p>
+                  <p className="mt-1 text-xs text-foreground-muted">
+                    Further than that? Message Jake — exceptions possible for
+                    bigger jobs
+                  </p>
+                </div>
+              </div>
+
               <p className="mt-6 text-sm text-foreground-muted">
                 Not sure if we cover your area? Call us —{" "}
                 <a
@@ -309,7 +349,9 @@ export default function Home() {
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-base text-foreground-muted">
                 Pick your service and a weekend slot below. We&apos;ll confirm
-                by phone or email within 24 hours.
+                by phone or email within 24 hours. Your Eircode shows your
+                travel distance and any call-out fee on a map before you book —
+                no surprises.
               </p>
             </AnimateIn>
 

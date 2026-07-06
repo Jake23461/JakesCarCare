@@ -34,6 +34,15 @@ import {
   type BookingData,
   type FlowpointConfig,
 } from "@/lib/bookings";
+import dynamic from "next/dynamic";
+import { isValidEircode, getTravelQuote, type TravelQuote } from "@/lib/travel";
+
+// Leaflet touches `window` at import time — load the map client-side only.
+const TravelMap = dynamic(() => import("@/components/travel-map"), { ssr: false });
+
+const WHATSAPP_NUMBER = "353877665058";
+
+type TravelStatus = "idle" | "checking" | "done" | "error";
 
 // Backend toggle. Set NEXT_PUBLIC_BOOKING_PROVIDER to "legacy" | "flowpoint".
 // The visible form UI is identical for both — only the submission target changes.
@@ -132,9 +141,51 @@ export function BookingSection() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const [dateError, setDateError] = useState("");
+  const [travel, setTravel] = useState<TravelQuote | null>(null);
+  const [travelStatus, setTravelStatus] = useState<TravelStatus>("idle");
+  const [travelError, setTravelError] = useState("");
 
   const set = <K extends keyof BookingData>(k: K, v: BookingData[K]) =>
     setForm((prev) => ({ ...prev, [k]: v }));
+
+  // ── Live travel quote from the Eircode custom field ────────────────────────
+  // Once the Eircode looks valid, wait for a pause in typing then ask the
+  // calculateTravel function for driving distance + call-out fee.
+  const eircodeInput = form.customFields?.eircode ?? "";
+  useEffect(() => {
+    const eircode = eircodeInput.trim();
+    setTravel(null);
+    setTravelError("");
+
+    if (!isValidEircode(eircode)) {
+      setTravelStatus("idle");
+      return;
+    }
+
+    let cancelled = false;
+    setTravelStatus("checking");
+    const id = setTimeout(async () => {
+      try {
+        const quote = await getTravelQuote(eircode);
+        if (cancelled) return;
+        setTravel(quote);
+        setTravelStatus("done");
+      } catch (err: unknown) {
+        if (cancelled) return;
+        setTravelStatus("error");
+        setTravelError(
+          err instanceof Error && err.message && !/internal/i.test(err.message)
+            ? err.message
+            : "We couldn't check that Eircode right now."
+        );
+      }
+    }, 600);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(id);
+    };
+  }, [eircodeInput]);
 
   // ── Load the Hub's configured slot times once (e.g. 09:00 / 13:00) ─────────
   useEffect(() => {
@@ -233,10 +284,14 @@ export function BookingSection() {
     !!form.email &&
     requiredFieldsFilled;
 
+  // Outside the service area — booking is blocked entirely
+  const outsideArea = travelStatus === "done" && !!travel?.tooFar;
+  const canSubmit = isComplete && !outsideArea && travelStatus !== "checking";
+
   // ── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isComplete) return;
+    if (!canSubmit) return;
 
     // Re-validate date is weekend
     const d = new Date(form.date + "T00:00:00");
@@ -254,14 +309,30 @@ export function BookingSection() {
     setSubmitting(true);
     setError("");
     try {
+      // Travel summary rides along in the notes so it shows up in the Hub.
+      const travelNote = travel
+        ? travel.calloutFee > 0
+          ? `Travel: ${travel.distanceKm} km (~${travel.durationMin} min) from Strokestown — call-out fee €${travel.calloutFee}${travel.estimated ? " (estimated)" : ""}`
+          : `Travel: ${travel.distanceKm} km (~${travel.durationMin} min) from Strokestown — free zone, no call-out fee${travel.estimated ? " (estimated)" : ""}`
+        : "Travel: distance check unavailable — confirm call-out fee with customer";
+      const payload: BookingData = {
+        ...form,
+        message: [form.message.trim(), travelNote].filter(Boolean).join("\n\n"),
+        customFields: {
+          ...(form.customFields ?? {}),
+          ...(travel ? { eircode: travel.eircode } : {}),
+        },
+      };
       if (BOOKING_PROVIDER === "flowpoint") {
-        await submitToFlowpoint(form);
+        await submitToFlowpoint(payload);
       } else {
-        await submitBooking(db, form);
+        await submitBooking(db, payload);
       }
       setSuccess(true);
       setForm(EMPTY);
       setOpenSlots([]);
+      setTravel(null);
+      setTravelStatus("idle");
     } catch (err: unknown) {
       setError(
         err instanceof Error
@@ -574,7 +645,7 @@ export function BookingSection() {
                   const Icon = FIELD_ICONS[field.fieldKey] ?? MapPin;
                   const value = form.customFields?.[field.fieldKey] ?? "";
                   const placeholder =
-                    field.fieldKey === "eircode" ? "Eircode (e.g. F42 AB12)" : field.label;
+                    field.fieldKey === "eircode" ? "Eircode (e.g. F42 VW32)" : field.label;
                   return (
                     <div key={field.id} className="relative">
                       <Icon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted z-10" />
@@ -604,6 +675,112 @@ export function BookingSection() {
                   );
                 })}
               </div>
+
+              {/* ── Travel distance & call-out fee (live from Eircode) ────── */}
+              <AnimatePresence>
+                {travelStatus !== "idle" && (
+                  <motion.div
+                    key="travel-panel"
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className="mt-3"
+                  >
+                    {travelStatus === "checking" && (
+                      <div className="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3">
+                        <Loader2 className="h-4 w-4 flex-shrink-0 animate-spin text-foreground-muted" />
+                        <p className="text-sm text-foreground-muted">
+                          Checking your distance from Strokestown...
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Route map — free zone circle + driving route to the customer */}
+                    {travelStatus === "done" && travel && travel.origin && travel.dest && (
+                      <div className="mb-3">
+                        <TravelMap quote={travel} />
+                      </div>
+                    )}
+
+                    {travelStatus === "done" && travel && travel.tooFar && (
+                      <div className="rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3">
+                        <div className="flex items-start gap-3">
+                          <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-400" />
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-red-400">
+                              Sorry — you&apos;re about {travel.distanceKm} km away,
+                              outside our {travel.maxKm} km service area.
+                            </p>
+                            <p className="mt-1 text-xs text-foreground-muted">
+                              For bigger jobs Jake can sometimes make an exception —
+                              send him a message and ask.
+                            </p>
+                            <a
+                              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+                                `Hi Jake, my Eircode is ${travel.eircode} (about ${travel.distanceKm} km from Strokestown). I know I'm outside your usual area — any chance of a valet?`
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-3 inline-flex min-h-[40px] items-center gap-2 rounded-full bg-accent px-5 text-xs font-bold text-white transition hover:bg-accent-dark"
+                            >
+                              Message Jake on WhatsApp
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {travelStatus === "done" && travel && !travel.tooFar && travel.freeZone && (
+                      <div className="flex items-start gap-3 rounded-xl border border-green-500/30 bg-green-500/5 px-4 py-3">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" />
+                        <p className="text-sm text-foreground">
+                          You&apos;re about{" "}
+                          <span className="font-bold">{travel.durationMin} min</span>{" "}
+                          from Strokestown —{" "}
+                          <span className="font-bold text-green-500">no call-out fee.</span>
+                          {travel.estimated && (
+                            <span className="text-xs text-foreground-muted"> (estimate)</span>
+                          )}
+                        </p>
+                      </div>
+                    )}
+
+                    {travelStatus === "done" && travel && !travel.tooFar && !travel.freeZone && (
+                      <div className="rounded-xl border border-accent/30 bg-accent/5 px-4 py-3">
+                        <div className="flex items-start gap-3">
+                          <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-accent" />
+                          <div className="flex-1">
+                            <p className="text-sm text-foreground">
+                              {travel.distanceKm} km · about {travel.durationMin} min
+                              from Strokestown
+                              {travel.estimated && (
+                                <span className="text-xs text-foreground-muted"> (estimate)</span>
+                              )}
+                            </p>
+                            <p className="mt-0.5 text-sm font-bold text-accent">
+                              +€{travel.calloutFee} call-out fee
+                            </p>
+                            <p className="mt-1 text-xs text-foreground-muted">
+                              Added to your service price to cover travel to your
+                              area.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {travelStatus === "error" && (
+                      <div className="flex items-start gap-3 rounded-xl border border-border bg-surface px-4 py-3">
+                        <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-foreground-muted" />
+                        <p className="text-sm text-foreground-muted">
+                          {travelError} You can still book — Jake will confirm any
+                          call-out fee with you.
+                        </p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
               {/* Message */}
               <div className="mt-3">
                 <textarea
@@ -634,11 +811,18 @@ export function BookingSection() {
 
             {/* ── Submit ───────────────────────────────────────────────── */}
             <div>
+              {travel && !travel.tooFar && travel.calloutFee > 0 && (
+                <p className="mb-3 text-center text-xs font-semibold text-foreground">
+                  Includes a{" "}
+                  <span className="text-accent">€{travel.calloutFee} call-out fee</span>{" "}
+                  for your area, added to the service price.
+                </p>
+              )}
               <button
                 type="submit"
-                disabled={!isComplete || submitting}
+                disabled={!canSubmit || submitting}
                 className={`inline-flex w-full min-h-[56px] items-center justify-center gap-3 rounded-full text-base font-black text-white shadow-lg transition ${
-                  isComplete && !submitting
+                  canSubmit && !submitting
                     ? "bg-accent shadow-accent/20 hover:bg-accent-dark cursor-pointer"
                     : "bg-border cursor-not-allowed opacity-50"
                 }`}
@@ -647,6 +831,11 @@ export function BookingSection() {
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
                     Sending booking...
+                  </>
+                ) : outsideArea ? (
+                  <>
+                    <AlertCircle className="h-5 w-5" />
+                    Outside service area
                   </>
                 ) : (
                   <>
