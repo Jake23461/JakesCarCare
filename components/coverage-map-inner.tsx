@@ -14,7 +14,6 @@ import { FREE_ZONE_POLYGON, SERVICE_BOUNDARY_POLYGON } from "@/lib/travel-zones"
 
 const ACCENT = "#dc2626";
 const FREE_ZONE = "#22c55e";
-const STROKESTOWN: [number, number] = [53.7767, -8.0983];
 
 export default function CoverageMapInner() {
   const ref = useRef<HTMLDivElement>(null);
@@ -57,23 +56,6 @@ export default function CoverageMapInner() {
       fillOpacity: 0.14,
     }).addTo(map);
 
-    L.marker(STROKESTOWN, {
-      icon: L.divIcon({
-        className: "",
-        html: '<span class="jcc-map-dot jcc-map-dot--base"></span>',
-        iconSize: [18, 18],
-        iconAnchor: [9, 9],
-      }),
-      interactive: false,
-    })
-      .addTo(map)
-      .bindTooltip("Jake - Strokestown", {
-        permanent: true,
-        direction: "top",
-        offset: [0, -10],
-        className: "jcc-map-label",
-      });
-
     map.fitBounds(L.latLngBounds(SERVICE_BOUNDARY_POLYGON), {
       padding: [6, 6],
     });
@@ -88,7 +70,7 @@ export default function CoverageMapInner() {
       ref={ref}
       className="jcc-map h-72 w-full sm:h-96"
       role="img"
-      aria-label="Map of Jake's Car Care service area around Strokestown — free call-out zone in green, 45 km booking limit dashed in red"
+      aria-label="Map of Jake's Car Care service area — free call-out zone in green, 45 km booking limit dashed in red"
     />
   );
 }

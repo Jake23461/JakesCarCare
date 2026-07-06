@@ -365,8 +365,8 @@ export function BookingSection() {
       // Travel summary rides along in the notes so it shows up in the Hub.
       const travelNote = travel
         ? appliedCalloutFee > 0 || travel.calloutFee > 0
-          ? `Travel: ${travel.distanceKm} km (~${travel.durationMin} min) from Strokestown — call-out fee €${appliedCalloutFee}${routeDayApplied ? ` (route-day discount, was €${travel.calloutFee})` : ""}${travel.estimated ? " (estimated)" : ""}`
-          : `Travel: ${travel.distanceKm} km (~${travel.durationMin} min) from Strokestown — free zone, no call-out fee${travel.estimated ? " (estimated)" : ""}`
+          ? `Travel: ${travel.distanceKm} km (~${travel.durationMin} min) — call-out fee €${appliedCalloutFee}${routeDayApplied ? ` (route-day discount, was €${travel.calloutFee})` : ""}${travel.estimated ? " (estimated)" : ""}`
+          : `Travel: ${travel.distanceKm} km (~${travel.durationMin} min) — free zone, no call-out fee${travel.estimated ? " (estimated)" : ""}`
         : "Travel: distance check unavailable — confirm call-out fee with customer";
       const payload: BookingData = {
         ...form,
@@ -760,7 +760,7 @@ export function BookingSection() {
                       <div className="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3">
                         <Loader2 className="h-4 w-4 flex-shrink-0 animate-spin text-foreground-muted" />
                         <p className="text-sm text-foreground-muted">
-                          Checking your distance from Strokestown...
+                          Checking your travel distance...
                         </p>
                       </div>
                     )}
@@ -787,7 +787,7 @@ export function BookingSection() {
                             </p>
                             <a
                               href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-                                `Hi Jake, my Eircode is ${travel.eircode} (about ${travel.distanceKm} km from Strokestown). I know I'm outside your usual area — any chance of a valet?`
+                                `Hi Jake, my Eircode is ${travel.eircode} (about ${travel.distanceKm} km away). I know I'm outside your usual area — any chance of a valet?`
                               )}`}
                               target="_blank"
                               rel="noopener noreferrer"
@@ -804,10 +804,9 @@ export function BookingSection() {
                       <div className="flex items-start gap-3 rounded-xl border border-green-500/30 bg-green-500/5 px-4 py-3">
                         <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" />
                         <p className="text-sm text-foreground">
-                          You&apos;re about{" "}
-                          <span className="font-bold">{travel.durationMin} min</span>{" "}
-                          from Strokestown —{" "}
-                          <span className="font-bold text-green-500">no call-out fee.</span>
+                          You&apos;re in our{" "}
+                          <span className="font-bold">free call-out zone</span> —{" "}
+                          <span className="font-bold text-green-500">no travel fee.</span>
                           {travel.estimated && (
                             <span className="text-xs text-foreground-muted"> (estimate)</span>
                           )}
@@ -822,7 +821,7 @@ export function BookingSection() {
                           <div className="flex-1">
                             <p className="text-sm text-foreground">
                               {travel.distanceKm} km · about {travel.durationMin} min
-                              from Strokestown
+                              drive away
                               {travel.estimated && (
                                 <span className="text-xs text-foreground-muted"> (estimate)</span>
                               )}

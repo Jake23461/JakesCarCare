@@ -3,9 +3,11 @@
 /**
  * TravelMap — dark-styled Leaflet map for the booking form's travel panel.
  *
- * Shows Jake's base in Strokestown, the green free-travel zone, the actual
- * driving route to the customer's Eircode, and (when relevant) the red
- * service-area boundary. Loaded via next/dynamic({ ssr: false }) only —
+ * Shows the green free-travel zone, the driving route to the customer's
+ * Eircode, and (when relevant) the red service-area boundary. Deliberately no
+ * base marker — the route is trimmed to start at the free-zone edge, and
+ * free-zone customers get no route at all, so the map never pinpoints where
+ * Jake actually lives. Loaded via next/dynamic({ ssr: false }) only —
  * Leaflet touches `window` at import time.
  */
 
@@ -28,13 +30,35 @@ function dotIcon(kind: "base" | "dest"): L.DivIcon {
   });
 }
 
+/** Ray-cast point-in-polygon test on [lat, lng] pairs. */
+function insidePolygon(point: [number, number], polygon: [number, number][]): boolean {
+  const [y, x] = point; // lat, lng
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [yi, xi] = polygon[i];
+    const [yj, xj] = polygon[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+/** Drops the leading part of the route that sits inside the free zone, so the
+ *  drawn line starts at the zone's edge instead of at the home base. */
+function trimRouteToZoneEdge(points: [number, number][]): [number, number][] {
+  const firstOutside = points.findIndex((p) => !insidePolygon(p, FREE_ZONE_POLYGON));
+  if (firstOutside <= 0) return points; // starts outside already, or never leaves
+  return points.slice(firstOutside - 1); // keep one inside point so the line meets the edge
+}
+
 export default function TravelMap({ quote }: { quote: TravelQuote }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = containerRef.current;
-    const { origin, dest } = quote;
-    if (!el || !origin || !dest) return;
+    const { dest } = quote;
+    if (!el || !dest) return;
 
     const map = L.map(el, {
       zoomControl: true,
@@ -48,8 +72,8 @@ export default function TravelMap({ quote }: { quote: TravelQuote }) {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
 
-    // Green free-travel zone — the real ~15-min DRIVING boundary around
-    // Strokestown (traced road-by-road, see lib/travel-zones.ts), not a circle.
+    // Green free-travel zone — the real ~15-min DRIVING boundary (traced
+    // road-by-road, see lib/travel-zones.ts), not a circle.
     const freeZonePoly = L.polygon(FREE_ZONE_POLYGON, {
       color: FREE_ZONE,
       weight: 1.5,
@@ -69,29 +93,19 @@ export default function TravelMap({ quote }: { quote: TravelQuote }) {
       }).addTo(map);
     }
 
-    // Driving route (real road path) — straight dashed line as fallback
-    const routePoints: [number, number][] = quote.polyline
-      ? decodePolyline(quote.polyline)
-      : [
-          [origin.lat, origin.lng],
-          [dest.lat, dest.lng],
-        ];
-    const route = L.polyline(routePoints, {
-      color: ACCENT,
-      weight: 4,
-      opacity: 0.9,
-      dashArray: quote.polyline ? undefined : "8 10",
-    }).addTo(map);
+    // Driving route from the free-zone edge to the customer. Free-zone
+    // customers get no route line — the zone itself is the whole story.
+    let route: L.Polyline | null = null;
+    if (!quote.freeZone && quote.polyline) {
+      const routePoints = trimRouteToZoneEdge(decodePolyline(quote.polyline));
+      route = L.polyline(routePoints, {
+        color: ACCENT,
+        weight: 4,
+        opacity: 0.9,
+      }).addTo(map);
+    }
 
-    // Markers + labels
-    L.marker([origin.lat, origin.lng], { icon: dotIcon("base"), interactive: false })
-      .addTo(map)
-      .bindTooltip("Jake - Strokestown", {
-        permanent: true,
-        direction: "top",
-        offset: [0, -10],
-        className: "jcc-map-label",
-      });
+    // Customer marker + label
     L.marker([dest.lat, dest.lng], { icon: dotIcon("dest"), interactive: false })
       .addTo(map)
       .bindTooltip(quote.eircode, {
@@ -101,11 +115,11 @@ export default function TravelMap({ quote }: { quote: TravelQuote }) {
         className: "jcc-map-label",
       });
 
-    // Frame the route; inside the free zone, frame the zone instead. When
-    // blocked, a little extra padding shows the boundary edge they crossed.
-    const bounds = quote.freeZone
-      ? freeZonePoly.getBounds().pad(0.15)
-      : route.getBounds().extend([origin.lat, origin.lng]);
+    // Frame the route + zone; inside the free zone, frame the zone itself.
+    // When blocked, a little extra padding shows the boundary edge they crossed.
+    const bounds = route
+      ? route.getBounds().extend(freeZonePoly.getBounds())
+      : freeZonePoly.getBounds().extend([dest.lat, dest.lng]).pad(0.1);
     map.fitBounds(quote.tooFar ? bounds.pad(0.2) : bounds, { padding: [36, 36] });
 
     return () => {
@@ -118,7 +132,7 @@ export default function TravelMap({ quote }: { quote: TravelQuote }) {
       ref={containerRef}
       className="jcc-map h-56 w-full sm:h-64"
       role="img"
-      aria-label={`Map showing the ${quote.distanceKm} km route from Strokestown to ${quote.eircode}`}
+      aria-label={`Map showing the ${quote.distanceKm} km journey to ${quote.eircode}`}
     />
   );
 }

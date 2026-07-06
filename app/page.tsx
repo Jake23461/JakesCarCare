@@ -267,7 +267,7 @@ export default function Home() {
                     Free travel zone
                   </p>
                   <p className="mt-1 text-xs text-foreground-muted">
-                    No call-out fee within ~15 minutes of Strokestown
+                    No call-out fee anywhere inside the green zone
                   </p>
                 </div>
                 <div className="rounded-2xl border border-border bg-surface-raised p-5 text-center">
