@@ -6,6 +6,7 @@ import { AnimateIn } from "@/components/ui/animate-in";
 import { StaggerChildren } from "@/components/ui/stagger-children";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { BookingSection } from "@/components/booking-section";
+import { CoverageMap } from "@/components/coverage-map";
 import { ReviewsSection } from "@/components/reviews-section";
 import { GallerySection } from "@/components/gallery-section";
 import {
@@ -249,6 +250,11 @@ export default function Home() {
                 <span className="rounded-full border border-accent/30 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent">
                   + surrounding areas
                 </span>
+              </div>
+
+              {/* Live coverage map — traced free zone + 45 km boundary */}
+              <div className="mx-auto mt-10 max-w-3xl">
+                <CoverageMap />
               </div>
 
               {/* Travel / call-out fee explainer */}

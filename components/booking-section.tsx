@@ -31,6 +31,8 @@ import {
   getFlowpointConfig,
   submitBooking,
   submitToFlowpoint,
+  logTravelEvent,
+  getNearbyDays,
   type BookingData,
   type FlowpointConfig,
 } from "@/lib/bookings";
@@ -144,6 +146,9 @@ export function BookingSection() {
   const [travel, setTravel] = useState<TravelQuote | null>(null);
   const [travelStatus, setTravelStatus] = useState<TravelStatus>("idle");
   const [travelError, setTravelError] = useState("");
+  // Route-day suggestion: a date Jake is already booked near this customer,
+  // offered with a discounted call-out fee to stack jobs into one trip.
+  const [routeDay, setRouteDay] = useState<{ date: string; discountedFee: number } | null>(null);
 
   const set = <K extends keyof BookingData>(k: K, v: BookingData[K]) =>
     setForm((prev) => ({ ...prev, [k]: v }));
@@ -156,6 +161,7 @@ export function BookingSection() {
     const eircode = eircodeInput.trim();
     setTravel(null);
     setTravelError("");
+    setRouteDay(null);
 
     if (!isValidEircode(eircode)) {
       setTravelStatus("idle");
@@ -170,6 +176,32 @@ export function BookingSection() {
         if (cancelled) return;
         setTravel(quote);
         setTravelStatus("done");
+
+        // Demand signal for the Hub — logged whether or not they book.
+        logTravelEvent("travel_quote", {
+          routingKey: quote.eircode.slice(0, 3),
+          distanceKm: quote.distanceKm,
+          durationMin: quote.durationMin,
+          calloutFee: quote.calloutFee,
+          freeZone: quote.freeZone,
+          tooFar: quote.tooFar,
+          estimated: !!quote.estimated,
+        });
+
+        // Route-day suggestion: is Jake already booked near them soon?
+        if (!quote.tooFar && quote.calloutFee > 0 && quote.dest) {
+          const days = await getNearbyDays(quote.dest.lat, quote.dest.lng);
+          if (cancelled) return;
+          const tomorrow = getTomorrowDateString();
+          // Only days with slot capacity left (two slots per day)
+          const candidate = days.find((d) => d.date >= tomorrow && d.total < 2);
+          if (candidate) {
+            setRouteDay({
+              date: candidate.date,
+              discountedFee: Math.max(0, Math.floor(quote.calloutFee / 2 / 5) * 5),
+            });
+          }
+        }
       } catch (err: unknown) {
         if (cancelled) return;
         setTravelStatus("error");
@@ -288,6 +320,27 @@ export function BookingSection() {
   const outsideArea = travelStatus === "done" && !!travel?.tooFar;
   const canSubmit = isComplete && !outsideArea && travelStatus !== "checking";
 
+  // Route-day discount applies only while the suggested date is selected
+  const routeDayApplied = !!(
+    routeDay &&
+    form.date === routeDay.date &&
+    travel &&
+    !travel.tooFar &&
+    travel.calloutFee > 0
+  );
+  const appliedCalloutFee = travel
+    ? routeDayApplied
+      ? routeDay.discountedFee
+      : travel.calloutFee
+    : 0;
+
+  const formatSuggestedDate = (dateStr: string) =>
+    new Date(dateStr + "T00:00:00").toLocaleDateString("en-IE", {
+      weekday: "long",
+      day: "numeric",
+      month: "short",
+    });
+
   // ── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -311,8 +364,8 @@ export function BookingSection() {
     try {
       // Travel summary rides along in the notes so it shows up in the Hub.
       const travelNote = travel
-        ? travel.calloutFee > 0
-          ? `Travel: ${travel.distanceKm} km (~${travel.durationMin} min) from Strokestown — call-out fee €${travel.calloutFee}${travel.estimated ? " (estimated)" : ""}`
+        ? appliedCalloutFee > 0 || travel.calloutFee > 0
+          ? `Travel: ${travel.distanceKm} km (~${travel.durationMin} min) from Strokestown — call-out fee €${appliedCalloutFee}${routeDayApplied ? ` (route-day discount, was €${travel.calloutFee})` : ""}${travel.estimated ? " (estimated)" : ""}`
           : `Travel: ${travel.distanceKm} km (~${travel.durationMin} min) from Strokestown — free zone, no call-out fee${travel.estimated ? " (estimated)" : ""}`
         : "Travel: distance check unavailable — confirm call-out fee with customer";
       const payload: BookingData = {
@@ -322,17 +375,34 @@ export function BookingSection() {
           ...(form.customFields ?? {}),
           ...(travel ? { eircode: travel.eircode } : {}),
         },
+        travelFeeCents: travel ? Math.round(appliedCalloutFee * 100) : null,
+        travelDistanceKm: travel?.distanceKm ?? null,
+        travelMinutes: travel?.durationMin ?? null,
+        travelLat: travel?.dest?.lat ?? null,
+        travelLng: travel?.dest?.lng ?? null,
       };
       if (BOOKING_PROVIDER === "flowpoint") {
         await submitToFlowpoint(payload);
       } else {
         await submitBooking(db, payload);
       }
+      if (travel) {
+        logTravelEvent("travel_quote_booked", {
+          routingKey: travel.eircode.slice(0, 3),
+          distanceKm: travel.distanceKm,
+          durationMin: travel.durationMin,
+          calloutFee: appliedCalloutFee,
+          routeDayDiscount: routeDayApplied,
+          freeZone: travel.freeZone,
+          estimated: !!travel.estimated,
+        });
+      }
       setSuccess(true);
       setForm(EMPTY);
       setOpenSlots([]);
       setTravel(null);
       setTravelStatus("idle");
+      setRouteDay(null);
     } catch (err: unknown) {
       setError(
         err instanceof Error
@@ -758,7 +828,12 @@ export function BookingSection() {
                               )}
                             </p>
                             <p className="mt-0.5 text-sm font-bold text-accent">
-                              +€{travel.calloutFee} call-out fee
+                              +€{appliedCalloutFee} call-out fee
+                              {routeDayApplied && (
+                                <span className="ml-2 text-xs font-semibold text-green-500">
+                                  route-day discount (was €{travel.calloutFee})
+                                </span>
+                              )}
                             </p>
                             <p className="mt-1 text-xs text-foreground-muted">
                               Added to your service price to cover travel to your
@@ -768,6 +843,44 @@ export function BookingSection() {
                         </div>
                       </div>
                     )}
+
+                    {/* Route-day suggestion — Jake is already booked nearby */}
+                    {travelStatus === "done" &&
+                      travel &&
+                      !travel.tooFar &&
+                      !travel.freeZone &&
+                      routeDay &&
+                      !routeDayApplied && (
+                        <div className="mt-3 rounded-xl border border-green-500/30 bg-green-500/5 px-4 py-3">
+                          <div className="flex items-start gap-3">
+                            <CalendarDays className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" />
+                            <div className="flex-1">
+                              <p className="text-sm text-foreground">
+                                Jake is already booked near you on{" "}
+                                <span className="font-bold">
+                                  {formatSuggestedDate(routeDay.date)}
+                                </span>{" "}
+                                — choose that date and your call-out fee drops to{" "}
+                                <span className="font-bold text-green-500">
+                                  {routeDay.discountedFee > 0
+                                    ? `€${routeDay.discountedFee}`
+                                    : "free"}
+                                </span>
+                                .
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDateSelect(new Date(routeDay.date + "T00:00:00"))
+                                }
+                                className="mt-2.5 inline-flex min-h-[40px] items-center gap-2 rounded-full bg-green-500 px-5 text-xs font-bold text-white transition hover:bg-green-600"
+                              >
+                                Book {formatSuggestedDate(routeDay.date)}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                     {travelStatus === "error" && (
                       <div className="flex items-start gap-3 rounded-xl border border-border bg-surface px-4 py-3">
@@ -813,9 +926,23 @@ export function BookingSection() {
             <div>
               {travel && !travel.tooFar && travel.calloutFee > 0 && (
                 <p className="mb-3 text-center text-xs font-semibold text-foreground">
-                  Includes a{" "}
-                  <span className="text-accent">€{travel.calloutFee} call-out fee</span>{" "}
-                  for your area, added to the service price.
+                  {appliedCalloutFee > 0 ? (
+                    <>
+                      Includes a{" "}
+                      <span className="text-accent">
+                        €{appliedCalloutFee} call-out fee
+                      </span>{" "}
+                      for your area, added to the service price.
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-green-500">No call-out fee</span> —
+                      route-day discount applied.
+                    </>
+                  )}
+                  {routeDayApplied && appliedCalloutFee > 0 && (
+                    <span className="text-green-500"> Route-day discount applied.</span>
+                  )}
                 </p>
               )}
               <button

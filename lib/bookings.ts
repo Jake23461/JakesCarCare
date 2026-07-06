@@ -45,6 +45,13 @@ export interface BookingData {
   adminCreated?: boolean;
   price?: string;
   completed?: boolean;
+  // Travel quote captured at booking time — first-class in the Hub
+  // (callout_fee_cents folds into the booking total there).
+  travelFeeCents?: number | null;
+  travelDistanceKm?: number | null;
+  travelMinutes?: number | null;
+  travelLat?: number | null;
+  travelLng?: number | null;
 }
 
 // ─── Hub booking-config (services / add-ons / custom fields) ───────────────────
@@ -378,6 +385,11 @@ export async function submitToFlowpoint(data: BookingData): Promise<void> {
       notes: data.message || undefined,
       addons,
       customFields,
+      calloutFeeCents: data.travelFeeCents ?? 0,
+      travelDistanceKm: data.travelDistanceKm ?? undefined,
+      travelMinutes: data.travelMinutes ?? undefined,
+      travelLat: data.travelLat ?? undefined,
+      travelLng: data.travelLng ?? undefined,
     }),
   });
 
@@ -392,5 +404,54 @@ export async function submitToFlowpoint(data: BookingData): Promise<void> {
       body?.error ||
         "Couldn't submit your booking. Please try again or call 087 766 5058."
     );
+  }
+}
+
+/**
+ * Fire-and-forget analytics event to the Hub — used to log travel quotes so
+ * the Hub shows WHERE demand comes from, including people who saw a fee and
+ * didn't book. Never throws; never blocks the UI.
+ */
+export function logTravelEvent(
+  type: "travel_quote" | "travel_quote_booked",
+  metadata: Record<string, unknown>
+): void {
+  try {
+    void fetch(`${FLOWPOINT_API}/api/public/analytics/collect`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-flowpoint-site-token": FLOWPOINT_TOKEN,
+      },
+      body: JSON.stringify({ type, page: "/#contact", metadata }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // Analytics must never interfere with booking.
+  }
+}
+
+export interface NearbyDay {
+  date: string; // YYYY-MM-DD
+  nearby: number;
+  total: number;
+}
+
+/**
+ * Upcoming dates where the Hub already has a booking near the given location —
+ * used to suggest route-days ("Jake is already in your area on...") with a
+ * discounted call-out fee.
+ */
+export async function getNearbyDays(lat: number, lng: number): Promise<NearbyDay[]> {
+  try {
+    const url =
+      `${FLOWPOINT_API}/api/public/nearby-days?token=${encodeURIComponent(FLOWPOINT_TOKEN)}` +
+      `&lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}&radiusKm=15&days=42`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data.days) ? data.days : [];
+  } catch {
+    return [];
   }
 }
