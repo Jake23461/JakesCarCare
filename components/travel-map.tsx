@@ -3,12 +3,10 @@
 /**
  * TravelMap — dark-styled Leaflet map for the booking form's travel panel.
  *
- * Shows the green free-travel zone, the driving route to the customer's
- * Eircode, and (when relevant) the red service-area boundary. Deliberately no
- * base marker — the route is trimmed to start at the free-zone edge, and
- * free-zone customers get no route at all, so the map never pinpoints where
- * Jake actually lives. Loaded via next/dynamic({ ssr: false }) only —
- * Leaflet touches `window` at import time.
+ * Shows the green free-travel zone, the driving route between Strokestown
+ * town centre (a generic public point — deliberately no labelled base marker)
+ * and the customer's Eircode, plus the red 45 km service boundary. Loaded via
+ * next/dynamic({ ssr: false }) only — Leaflet touches `window` at import time.
  */
 
 import { useEffect, useRef } from "react";
@@ -30,34 +28,12 @@ function dotIcon(kind: "base" | "dest"): L.DivIcon {
   });
 }
 
-/** Ray-cast point-in-polygon test on [lat, lng] pairs. */
-function insidePolygon(point: [number, number], polygon: [number, number][]): boolean {
-  const [y, x] = point; // lat, lng
-  let inside = false;
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const [yi, xi] = polygon[i];
-    const [yj, xj] = polygon[j];
-    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
-      inside = !inside;
-    }
-  }
-  return inside;
-}
-
-/** Drops the leading part of the route that sits inside the free zone, so the
- *  drawn line starts at the zone's edge instead of at the home base. */
-function trimRouteToZoneEdge(points: [number, number][]): [number, number][] {
-  const firstOutside = points.findIndex((p) => !insidePolygon(p, FREE_ZONE_POLYGON));
-  if (firstOutside <= 0) return points; // starts outside already, or never leaves
-  return points.slice(firstOutside - 1); // keep one inside point so the line meets the edge
-}
-
 export default function TravelMap({ quote }: { quote: TravelQuote }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = containerRef.current;
-    const { dest } = quote;
+    const { origin, dest } = quote;
     if (!el || !dest) return;
 
     const map = L.map(el, {
@@ -82,28 +58,35 @@ export default function TravelMap({ quote }: { quote: TravelQuote }) {
       fillOpacity: 0.12,
     }).addTo(map);
 
-    // Red service-area boundary (45 km by road) — only when outside it
-    if (quote.tooFar) {
-      L.polygon(SERVICE_BOUNDARY_POLYGON, {
-        color: ACCENT,
-        weight: 1.5,
-        opacity: 0.7,
-        dashArray: "6 8",
-        fillOpacity: 0,
-      }).addTo(map);
-    }
+    // Red service-area boundary (45 km by road) — always drawn; it comes into
+    // view naturally when the frame or the customer's location reaches it.
+    L.polygon(SERVICE_BOUNDARY_POLYGON, {
+      color: ACCENT,
+      weight: 1.5,
+      opacity: 0.7,
+      dashArray: "6 8",
+      fillOpacity: 0,
+    }).addTo(map);
 
-    // Driving route from the free-zone edge to the customer. Free-zone
-    // customers get no route line — the zone itself is the whole story.
-    let route: L.Polyline | null = null;
-    if (!quote.freeZone && quote.polyline) {
-      const routePoints = trimRouteToZoneEdge(decodePolyline(quote.polyline));
-      route = L.polyline(routePoints, {
-        color: ACCENT,
-        weight: 4,
-        opacity: 0.9,
-      }).addTo(map);
-    }
+    // Driving route into Strokestown town centre (a generic public point —
+    // deliberately not a labelled marker). Straight dashed line as fallback.
+    const routePoints: [number, number][] = quote.polyline
+      ? decodePolyline(quote.polyline)
+      : origin
+        ? [
+            [origin.lat, origin.lng],
+            [dest.lat, dest.lng],
+          ]
+        : [];
+    const route =
+      routePoints.length > 1
+        ? L.polyline(routePoints, {
+            color: ACCENT,
+            weight: 4,
+            opacity: 0.9,
+            dashArray: quote.polyline ? undefined : "8 10",
+          }).addTo(map)
+        : null;
 
     // Customer marker + label
     L.marker([dest.lat, dest.lng], { icon: dotIcon("dest"), interactive: false })
@@ -117,9 +100,10 @@ export default function TravelMap({ quote }: { quote: TravelQuote }) {
 
     // Frame the route + zone; inside the free zone, frame the zone itself.
     // When blocked, a little extra padding shows the boundary edge they crossed.
-    const bounds = route
-      ? route.getBounds().extend(freeZonePoly.getBounds())
-      : freeZonePoly.getBounds().extend([dest.lat, dest.lng]).pad(0.1);
+    const bounds =
+      quote.freeZone || !route
+        ? freeZonePoly.getBounds().extend([dest.lat, dest.lng]).pad(0.1)
+        : route.getBounds().extend(freeZonePoly.getBounds());
     map.fitBounds(quote.tooFar ? bounds.pad(0.2) : bounds, { padding: [36, 36] });
 
     return () => {
