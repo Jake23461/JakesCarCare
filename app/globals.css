@@ -194,18 +194,3 @@ html {
 .jcc-map-label::before {
   display: none !important;
 }
-/* Landmark town labels on the coverage map — quieter than the main labels */
-.jcc-map-label.jcc-map-town {
-  background: rgba(255, 255, 255, 0.88) !important;
-  color: #1f1f1f !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  font-size: 10px !important;
-  font-weight: 600 !important;
-  padding: 1px 7px !important;
-}
-.jcc-map-dot--town {
-  width: 10px;
-  height: 10px;
-  border-width: 2px;
-  background: #9ca3af;
-}
