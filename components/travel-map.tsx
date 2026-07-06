@@ -86,7 +86,7 @@ export default function TravelMap({ quote }: { quote: TravelQuote }) {
     // Markers + labels
     L.marker([origin.lat, origin.lng], { icon: dotIcon("base"), interactive: false })
       .addTo(map)
-      .bindTooltip("Jake — Strokestown", {
+      .bindTooltip("Jake - Strokestown", {
         permanent: true,
         direction: "top",
         offset: [0, -10],
