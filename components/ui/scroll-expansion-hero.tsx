@@ -309,22 +309,30 @@ export function ScrollExpandHero({
                 animate={{ opacity: expanded ? 1 : 0, y: expanded ? 0 : 16 }}
                 transition={{ duration: 0.55, delay: 0.2, ease: "easeOut" }}
               >
-                {headingLine1 && (
-                  <h1
-                    className="block text-5xl sm:text-6xl md:text-7xl font-black uppercase tracking-tighter text-white leading-none"
-                    style={{ textShadow: "0 2px 20px rgba(0,0,0,0.6)" }}
-                  >
-                    {headingLine1}
-                  </h1>
-                )}
-                {headingLine2 && (
-                  <h1
-                    className="block text-5xl sm:text-6xl md:text-7xl font-black uppercase tracking-tighter text-accent leading-none"
-                    style={{ textShadow: "0 2px 20px rgba(0,0,0,0.6)" }}
-                  >
-                    {headingLine2}
-                  </h1>
-                )}
+                {/* Single h1 — two visual lines via block spans, plus an
+                    sr-only tail so the page's one h1 carries the keywords */}
+                <h1>
+                  {headingLine1 && (
+                    <span
+                      className="block text-5xl sm:text-6xl md:text-7xl font-black uppercase tracking-tighter text-white leading-none"
+                      style={{ textShadow: "0 2px 20px rgba(0,0,0,0.6)" }}
+                    >
+                      {headingLine1}
+                    </span>
+                  )}
+                  {headingLine2 && (
+                    <span
+                      className="block text-5xl sm:text-6xl md:text-7xl font-black uppercase tracking-tighter text-accent leading-none"
+                      style={{ textShadow: "0 2px 20px rgba(0,0,0,0.6)" }}
+                    >
+                      {headingLine2}
+                    </span>
+                  )}
+                  <span className="sr-only">
+                    {" "}
+                    — Mobile Car Valeting in Roscommon &amp; Longford
+                  </span>
+                </h1>
               </motion.div>
             )}
 

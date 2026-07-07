@@ -17,19 +17,19 @@ import {
 
 export const heroMedia = {
   mediaType: "image" as "video" | "image",
-  mediaSrc:
-    "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=1920&q=80",
-  posterSrc: "/images/jakes-car-care-poster.jpg",
+  // Self-hosted, optimized copy of the hero shot (regenerate with
+  // scripts/generate-og.mjs) — same visual as before, no Unsplash hot-link.
+  mediaSrc: "/images/hero-wash.jpg",
+  posterSrc: "/images/hero-wash.jpg",
   bgImageSrc: "", // solid black hero background (no hot-linked stock image)
-  fallbackImageSrc:
-    "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=1920&q=80",
+  fallbackImageSrc: "/images/hero-wash.jpg",
 };
 
 export const siteConfig = {
   businessName: "Jake's Car Care",
   shortName: "Jake's",
   tagline: "From road grime to showroom shine.",
-  logoSrc: "",
+  logoSrc: "/gallery/Logo.png",
   description:
     "Mobile car valeting and detailing across Roscommon and Longford. Full valet, interior clean, exterior wash, and paint-safe detailing - we come to you.",
   location: "Strokestown, Co. Roscommon",
@@ -48,11 +48,13 @@ export const siteConfig = {
   heroSecondary: { label: "View services", href: "#services" },
 } as const;
 
+// Page-absolute hashes so the links work from subpages (/areas/*, /faq/) too
 export const navLinks = [
-  { href: "#services", label: "Services" },
-  { href: "#about", label: "About" },
-  { href: "#reviews", label: "Reviews" },
-  { href: "#contact", label: "Contact" },
+  { href: "/#services", label: "Services" },
+  { href: "/areas/", label: "Areas" },
+  { href: "/#reviews", label: "Reviews" },
+  { href: "/faq/", label: "FAQ" },
+  { href: "/#contact", label: "Contact" },
 ];
 
 export const trustPoints = [
@@ -75,28 +77,28 @@ export const services: Service[] = [
     title: "Full Valet",
     description:
       "Complete transformation inside and out. Exterior shampoo and wax, wheel cleaning and tyre shine, window cleaning, full vacuum, dashboard and console clean, leather/fabric treatment, and air freshener.",
-    tag: "EUR100-EUR120",
+    tag: "€100–€120",
   },
   {
     icon: Droplets,
     title: "Exterior Only",
     description:
       "Full exterior wash and protection - no interior cleaning. Exterior shampoo and wax, wheel cleaning and tyre shine, window cleaning, and air freshener. Perfect when the inside is already clean.",
-    tag: "EUR50",
+    tag: "€50",
   },
   {
     icon: Sparkles,
     title: "Interior Only",
     description:
       "Deep interior cleaning and restoration. Full vacuum and dust removal, dashboard and console cleaning, leather/fabric treatment, and air freshener. Restores your cabin to showroom condition.",
-    tag: "EUR70-EUR90",
+    tag: "€70–€90",
   },
   {
     icon: Shield,
     title: "Premium Add-ons",
     description:
-      "Enhance any service with Protector Wax (+EUR25) for lasting paint protection and shine, or Iron Fallout & Tar Remover (+EUR20) to remove embedded particles for a smoother finish. Select during booking.",
-    tag: "From +EUR20",
+      "Enhance any service with Protector Wax (+€25) for lasting paint protection and shine, or Iron Fallout & Tar Remover (+€20) to remove embedded particles for a smoother finish. Select during booking.",
+    tag: "From +€20",
   },
 ];
 
@@ -117,6 +119,9 @@ export type Review = {
   name: string;
   text: string;
   stars: number;
+  /** Month the review was left on Google, e.g. "June 2025" — shown on the card
+   *  and used as datePublished in structured data. */
+  date: string;
 };
 
 export const reviews: Review[] = [
@@ -124,16 +129,19 @@ export const reviews: Review[] = [
     name: "Bernadette Trimble",
     text: "Jake did a fab job on the full car valet. Better than the shops do.",
     stars: 5,
+    date: "June 2025",
   },
   {
     name: "Yasin Machigov",
     text: "Serious work done on my car by Jake. Very respectful and took care of me.",
     stars: 5,
+    date: "August 2025",
   },
   {
     name: "Avril",
     text: "Great job on the interior and exterior of my car. Lovely to deal with and prompt replies! Thanks again, Jake!",
     stars: 5,
+    date: "September 2025",
   },
 ];
 

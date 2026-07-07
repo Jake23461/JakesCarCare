@@ -2,22 +2,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "export",
+  // Canonical URL shape is /path/ — GitHub Pages serves folder/index.html
+  trailingSlash: true,
   turbopack: {
     root: __dirname,
   },
   images: {
     unoptimized: true,
     remotePatterns: [
-      // Unsplash — stock placeholder images used during development
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-      // Picsum — general-purpose development placeholders
-      {
-        protocol: "https",
-        hostname: "picsum.photos",
-      },
       // Firebase Storage
       {
         protocol: "https",

@@ -5,8 +5,14 @@ import { ScrollExpandHero } from "@/components/ui/scroll-expansion-hero";
 import { AnimateIn } from "@/components/ui/animate-in";
 import { StaggerChildren } from "@/components/ui/stagger-children";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
+import Link from "next/link";
 import { BookingSection } from "@/components/booking-section";
 import { CoverageMap } from "@/components/coverage-map";
+import { FaqList } from "@/components/faq-section";
+import { SiteFooter } from "@/components/site-footer";
+import { JsonLd } from "@/components/json-ld";
+import { localBusinessSchema } from "@/lib/schema";
+import { homeFaqs } from "@/lib/faq";
 import { ReviewsSection } from "@/components/reviews-section";
 import { GallerySection } from "@/components/gallery-section";
 import {
@@ -25,6 +31,7 @@ export default function Home() {
   return (
     <>
       <Nav />
+      <JsonLd data={localBusinessSchema()} />
 
       <main className="flex flex-col bg-background text-foreground">
         {/* ── 1. Scroll-Expansion Hero ───────────────────────────────────────── */}
@@ -344,6 +351,27 @@ export default function Home() {
             </AnimateIn>
           </section>
 
+          {/* ── 8b. FAQ ───────────────────────────────────────────────────────── */}
+          <section id="faq" className="border-t border-border bg-surface px-6 py-24">
+            <AnimateIn className="mx-auto max-w-3xl">
+              <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-accent">
+                Good to know
+              </p>
+              <h2 className="mb-8 text-center text-3xl font-black text-foreground">
+                Frequently asked questions
+              </h2>
+              <FaqList faqs={homeFaqs} />
+              <p className="mt-6 text-center text-sm text-foreground-muted">
+                <Link
+                  href="/faq/"
+                  className="font-semibold text-accent transition hover:text-accent-dark"
+                >
+                  See all FAQs →
+                </Link>
+              </p>
+            </AnimateIn>
+          </section>
+
           {/* ── 9. Booking ────────────────────────────────────────────────────── */}
           <section id="contact" className="bg-background px-6 py-24">
             <AnimateIn className="mx-auto max-w-3xl text-center">
@@ -419,69 +447,7 @@ export default function Home() {
           </section>
 
           {/* ── Footer ────────────────────────────────────────────────────────── */}
-          <footer className="border-t border-border bg-surface px-6 py-12 text-center">
-            <div className="mx-auto max-w-4xl">
-              <div className="mb-4 flex items-center justify-center">
-                {siteConfig.logoSrc ? (
-                  <div className="flex flex-col items-center gap-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={siteConfig.logoSrc}
-                      alt={siteConfig.businessName}
-                      className="h-16 w-auto opacity-90"
-                    />
-                    <p className="brand-wordmark text-sm text-foreground">
-                      {siteConfig.businessName}
-                    </p>
-                  </div>
-                ) : (
-                  <p className="brand-wordmark text-base text-foreground">
-                    {siteConfig.businessName}
-                  </p>
-                )}
-              </div>
-              <a
-                href={siteConfig.phoneHref}
-                className="text-sm text-foreground-muted transition hover:text-accent"
-              >
-                {siteConfig.phoneDisplay}
-              </a>
-              <p className="mt-1 text-sm text-foreground-muted">
-                {siteConfig.location} &middot; Mobile service across{" "}
-                {siteConfig.serviceArea}
-              </p>
-              <div className="mt-5 flex items-center justify-center gap-5">
-                <a
-                  href={siteConfig.facebookHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-raised px-4 py-2 text-sm font-semibold text-foreground-muted transition hover:border-accent/40 hover:text-foreground"
-                >
-                  Facebook
-                </a>
-                <a
-                  href={siteConfig.tiktokHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-raised px-4 py-2 text-sm font-semibold text-foreground-muted transition hover:border-accent/40 hover:text-foreground"
-                >
-                  TikTok
-                </a>
-                <a
-                  href={siteConfig.googleReviewsHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-bold text-white transition hover:bg-accent-dark"
-                >
-                  Leave a Review
-                </a>
-              </div>
-              <p className="mt-8 text-xs text-foreground-muted/40">
-                &copy; {new Date().getFullYear()} {siteConfig.businessName}.
-                All rights reserved.
-              </p>
-            </div>
-          </footer>
+          <SiteFooter />
         </ScrollExpandHero>
       </main>
     </>
