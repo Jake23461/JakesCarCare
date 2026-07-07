@@ -9,7 +9,7 @@ const FLOWPOINT_API = "https://hub.flowpointstudios.ie";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://jakescarcare.ie"),
-  title: "Jake's Car Care | Mobile Valeting — Roscommon & Longford",
+  title: "Mobile Car Valeting Roscommon & Longford | Jake's Car Care",
   description:
     "Professional mobile car valeting and detailing across Roscommon and Longford. Full valet, interior clean, exterior wash, and paint-safe detailing. Call 087 766 5058.",
   alternates: { canonical: "/" },
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    title: "Jake's Car Care | Mobile Valeting — Roscommon & Longford",
+    title: "Mobile Car Valeting Roscommon & Longford | Jake's Car Care",
     description:
       "From road grime to showroom shine. Professional mobile car valeting across Roscommon and Longford.",
     type: "website",
