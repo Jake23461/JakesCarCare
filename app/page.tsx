@@ -44,7 +44,7 @@ export default function Home() {
           titleLine2={siteConfig.heroTitleLine2}
           headingLine1="Jake's"
           headingLine2="Car Care."
-          logoSrc={siteConfig.logoSrc}
+          logoSrc="" // keep the hero clean — logo lives in the nav and footer
           logoAlt={siteConfig.businessName}
           subtitle={siteConfig.heroSubtitle}
           scrollPrompt={siteConfig.heroScrollPrompt}
