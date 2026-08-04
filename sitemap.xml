@@ -1,45 +1,83 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://jakescarcare.ie/</loc>
-    <lastmod>2024-12-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://jakescarcare.ie/service-areas</loc>
-    <lastmod>2024-12-19</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://jakescarcare.ie/blog</loc>
-    <lastmod>2024-12-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://jakescarcare.ie/blog/keep-your-car-clean-in-roscommon-winter</loc>
-    <lastmod>2024-07-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://jakescarcare.ie/blog/mobile-valeting-for-rural-drivers-longford</loc>
-    <lastmod>2024-07-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://jakescarcare.ie/blog/how-often-should-you-get-your-car-detailed</loc>
-    <lastmod>2024-07-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://jakescarcare.ie/blog/whats-included-in-a-full-valet</loc>
-    <lastmod>2024-07-20</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
+<url>
+<loc>https://jakescarcare.ie/</loc>
+<lastmod>2026-07-07T00:00:00.000Z</lastmod>
+<priority>1</priority>
+</url>
+<url>
+<loc>https://jakescarcare.ie/areas/</loc>
+<lastmod>2026-07-07T00:00:00.000Z</lastmod>
+<priority>0.8</priority>
+</url>
+<url>
+<loc>https://jakescarcare.ie/areas/strokestown/</loc>
+<lastmod>2026-07-07T00:00:00.000Z</lastmod>
+<priority>0.8</priority>
+</url>
+<url>
+<loc>https://jakescarcare.ie/areas/roscommon-town/</loc>
+<lastmod>2026-07-07T00:00:00.000Z</lastmod>
+<priority>0.8</priority>
+</url>
+<url>
+<loc>https://jakescarcare.ie/areas/castlerea/</loc>
+<lastmod>2026-07-07T00:00:00.000Z</lastmod>
+<priority>0.8</priority>
+</url>
+<url>
+<loc>https://jakescarcare.ie/areas/boyle/</loc>
+<lastmod>2026-07-07T00:00:00.000Z</lastmod>
+<priority>0.8</priority>
+</url>
+<url>
+<loc>https://jakescarcare.ie/areas/carrick-on-shannon/</loc>
+<lastmod>2026-07-07T00:00:00.000Z</lastmod>
+<priority>0.8</priority>
+</url>
+<url>
+<loc>https://jakescarcare.ie/areas/ballymahon/</loc>
+<lastmod>2026-07-07T00:00:00.000Z</lastmod>
+<priority>0.8</priority>
+</url>
+<url>
+<loc>https://jakescarcare.ie/areas/edgeworthstown/</loc>
+<lastmod>2026-07-07T00:00:00.000Z</lastmod>
+<priority>0.8</priority>
+</url>
+<url>
+<loc>https://jakescarcare.ie/areas/longford-town/</loc>
+<lastmod>2026-07-07T00:00:00.000Z</lastmod>
+<priority>0.8</priority>
+</url>
+<url>
+<loc>https://jakescarcare.ie/areas/athlone/</loc>
+<lastmod>2026-07-07T00:00:00.000Z</lastmod>
+<priority>0.5</priority>
+</url>
+<url>
+<loc>https://jakescarcare.ie/areas/loughrea/</loc>
+<lastmod>2026-07-07T00:00:00.000Z</lastmod>
+<priority>0.5</priority>
+</url>
+<url>
+<loc>https://jakescarcare.ie/services/full-valet/</loc>
+<lastmod>2026-07-07T00:00:00.000Z</lastmod>
+<priority>0.8</priority>
+</url>
+<url>
+<loc>https://jakescarcare.ie/services/interior-valet/</loc>
+<lastmod>2026-07-07T00:00:00.000Z</lastmod>
+<priority>0.8</priority>
+</url>
+<url>
+<loc>https://jakescarcare.ie/services/exterior-wash/</loc>
+<lastmod>2026-07-07T00:00:00.000Z</lastmod>
+<priority>0.8</priority>
+</url>
+<url>
+<loc>https://jakescarcare.ie/faq/</loc>
+<lastmod>2026-07-07T00:00:00.000Z</lastmod>
+<priority>0.7</priority>
+</url>
 </urlset>
