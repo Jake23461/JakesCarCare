@@ -34,8 +34,8 @@ export async function generateMetadata({
         ? "free call-out"
         : `€${town.calloutFee} call-out`;
   return {
-    title: `Mobile Car Valeting ${town.name} | Jake's Car Care`,
-    description: `Professional mobile car valeting in ${town.name}, ${town.county} — Jake comes to your home or workplace (${town.drivingKm > 0 ? `${town.drivingKm} km from Strokestown, ${feeText}` : "home base, no call-out fee"}). Full valet €100–€120. Weekends 9–6.`,
+    title: `Mobile Car Valeting & Car Wash ${town.name} | Jake's Car Care`,
+    description: `Professional mobile car valeting and car wash in ${town.name}, ${town.county} — Jake comes to your home or workplace (${town.drivingKm > 0 ? `${town.drivingKm} km from Strokestown, ${feeText}` : "home base, no call-out fee"}). Full valet €100–€120. Weekends 9–6.`,
     alternates: { canonical: `/areas/${town.slug}/` },
   };
 }
@@ -73,13 +73,13 @@ export default async function TownPage({
             </Link>
           </p>
           <h1 className="text-4xl font-black leading-tight text-foreground">
-            Mobile Car Valeting in {town.name}, {town.county}
+            Mobile Car Valeting &amp; Car Wash in {town.name}, {town.county}
           </h1>
           <p className="mt-4 text-base leading-relaxed text-foreground-muted">
-            Jake&apos;s Car Care brings professional valeting to {town.name} —
-            full valets, deep interior cleans and exterior washes done at your
-            home or workplace, weekends 9:00–18:00. You provide an outdoor tap
-            and a socket; Jake brings everything else.
+            Jake&apos;s Car Care brings professional valeting and car washing to{" "}
+            {town.name} — full valets, deep interior cleans and exterior car
+            washes done at your home or workplace, weekends 9:00–18:00. You
+            provide an outdoor tap and a socket; Jake brings everything else.
           </p>
 
           {/* Driving facts — real numbers, unique to this page */}

@@ -1,6 +1,6 @@
 # Jake's Car Care
 
-> Mobile car valeting based in Strokestown, Co. Roscommon, Ireland. Jake
+> Mobile car valeting and car wash based in Strokestown, Co. Roscommon, Ireland. Jake
 > drives to your home or workplace anywhere within a 45 km drive of
 > Strokestown. Weekends only, Saturday and Sunday 9:00-18:00.
 > Phone/text: 087 766 5058 (+353 87 766 5058).
@@ -9,7 +9,7 @@
 
 - Full Valet: €100-€120, ~4 hours — exterior shampoo & wax, wheels, glass, full interior deep clean, leather/fabric treatment
 - Interior Only: €70-€90, ~3 hours — full vacuum, dashboard & trim, leather/fabric treatment, rubbish removed
-- Exterior Only: €50, ~2 hours — hand shampoo, wax, wheels & tyre shine, exterior glass
+- Exterior Only (mobile car wash): €50, ~2 hours — hand shampoo, wax, wheels & tyre shine, exterior glass
 - Add-ons: Protector Wax +€25, Iron Fallout & Tar Remover +€20
 
 Customers provide an outdoor tap and a socket; Jake brings all equipment.
@@ -32,5 +32,5 @@ Payment on the day: cash or Revolut. Free cancellation with reasonable notice.
 - [Areas covered](https://jakescarcare.ie/areas/) — per-town pages with real driving distances & fees
 - [Full Valet](https://jakescarcare.ie/services/full-valet/)
 - [Interior Valet](https://jakescarcare.ie/services/interior-valet/)
-- [Exterior Wash](https://jakescarcare.ie/services/exterior-wash/)
+- [Car Wash & Exterior Valet](https://jakescarcare.ie/services/exterior-wash/)
 - [FAQ](https://jakescarcare.ie/faq/)

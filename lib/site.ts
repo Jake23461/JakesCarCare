@@ -31,7 +31,7 @@ export const siteConfig = {
   tagline: "From road grime to showroom shine.",
   logoSrc: "/gallery/Logo.png",
   description:
-    "Mobile car valeting and detailing across Roscommon and Longford. Full valet, interior clean, exterior wash, and paint-safe detailing - we come to you.",
+    "Mobile car valeting, car wash and detailing across Roscommon and Longford. Full valet, interior clean, exterior car wash, and paint-safe detailing - we come to you.",
   location: "Strokestown, Co. Roscommon",
   serviceArea: "Roscommon & Longford",
   phoneDisplay: "087 766 5058",
@@ -81,9 +81,9 @@ export const services: Service[] = [
   },
   {
     icon: Droplets,
-    title: "Exterior Only",
+    title: "Exterior Car Wash",
     description:
-      "Full exterior wash and protection - no interior cleaning. Exterior shampoo and wax, wheel cleaning and tyre shine, window cleaning, and air freshener. Perfect when the inside is already clean.",
+      "Full exterior car wash and protection - no interior cleaning. Hand shampoo and wax, wheel cleaning and tyre shine, window cleaning, and air freshener. Perfect when the inside is already clean.",
     tag: "€50",
   },
   {

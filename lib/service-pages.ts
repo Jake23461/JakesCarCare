@@ -74,15 +74,15 @@ export const servicePages: ServicePage[] = [
   {
     slug: "exterior-wash",
     name: "Exterior Only",
-    title: "Exterior Wash & Protect",
+    title: "Car Wash & Exterior Valet",
     metaDescription:
-      "Professional exterior car wash in Roscommon & Longford — hand shampoo, wax, wheels and tyre shine. €50, ~2 hours, at your home. Book online.",
+      "Mobile car wash in Roscommon & Longford — hand shampoo, wax, wheels and tyre shine, brought to your door. €50, ~2 hours, at your home. Book online.",
     minPrice: 50,
     maxPrice: 50,
     priceLabel: "€50",
     durationHours: 2,
     lead:
-      "A proper hand wash and protection for the outside of the car — shampoo, wax, wheels, tyres and glass. Two hours of careful work that a drive-through wash can't match, without touching the interior.",
+      "A proper hand car wash and protection for the outside of the car — shampoo, wax, wheels, tyres and glass. Two hours of careful work that a drive-through car wash can't match, done on your own driveway without touching the interior.",
     included: [
       "Pre-rinse and snow foam",
       "Two-bucket hand shampoo",
@@ -92,7 +92,7 @@ export const servicePages: ServicePage[] = [
       "Paint-safe products throughout",
     ],
     bestFor:
-      "Cars whose interiors are already grand, lease returns, or as a regular monthly wash between full valets. Add protector wax or iron fallout removal at booking for longer-lasting results.",
+      "Cars whose interiors are already grand, lease returns, or as a regular monthly car wash between full valets. Add protector wax or iron fallout removal at booking for longer-lasting results.",
     image: { src: "/gallery/Exterior.png", alt: "Exterior wash service" },
   },
 ];
