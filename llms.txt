@@ -1,6 +1,6 @@
 # Jake's Car Care
 
-> Mobile car valeting and car wash based in Strokestown, Co. Roscommon, Ireland. Jake
+> Mobile car valeting based in Strokestown, Co. Roscommon, Ireland. Jake
 > drives to your home or workplace anywhere within a 45 km drive of
 > Strokestown. Weekends only, Saturday and Sunday 9:00-18:00.
 > Phone/text: 087 766 5058 (+353 87 766 5058).
@@ -9,7 +9,7 @@
 
 - Full Valet: €100-€120, ~4 hours — exterior shampoo & wax, wheels, glass, full interior deep clean, leather/fabric treatment
 - Interior Only: €70-€90, ~3 hours — full vacuum, dashboard & trim, leather/fabric treatment, rubbish removed
-- Exterior Only (mobile car wash): €50, ~2 hours — hand shampoo, wax, wheels & tyre shine, exterior glass
+- Exterior Only: €50, ~2 hours — hand shampoo, wax, wheels & tyre shine, exterior glass
 - Add-ons: Protector Wax +€25, Iron Fallout & Tar Remover +€20
 
 Customers provide an outdoor tap and a socket; Jake brings all equipment.
@@ -18,12 +18,13 @@ Payment on the day: cash or Revolut. Free cancellation with reasonable notice.
 ## Coverage & call-out fees
 
 - Free call-out within 12 km or ~15 minutes' drive of Strokestown
-- Beyond that: €1 per km after the first 12 km, rounded up to the nearest €5
+- Beyond that: 50c per km after the first 12 km, rounded up to the nearest €5,
+  capped at €20 maximum
 - Online booking limit: 45 km driving distance
-- Real driving distances from Strokestown: Roscommon Town 19.7 km (€10),
-  Longford Town 23.4 km (€15), Carrick-on-Shannon 25.8 km (€15),
-  Castlerea 30.1 km (€20), Boyle 30.9 km (€20), Ballymahon 35.5 km (€25),
-  Edgeworthstown 38.5 km (€30)
+- Real driving distances from Strokestown: Roscommon Town 19.7 km (€5),
+  Longford Town 23.4 km (€10), Carrick-on-Shannon 25.8 km (€10),
+  Castlerea 30.1 km (€10), Boyle 30.9 km (€10), Ballymahon 35.5 km (€15),
+  Edgeworthstown 38.5 km (€15)
 - By arrangement only (outside 45 km): Athlone, Loughrea
 
 ## Pages
@@ -32,5 +33,5 @@ Payment on the day: cash or Revolut. Free cancellation with reasonable notice.
 - [Areas covered](https://jakescarcare.ie/areas/) — per-town pages with real driving distances & fees
 - [Full Valet](https://jakescarcare.ie/services/full-valet/)
 - [Interior Valet](https://jakescarcare.ie/services/interior-valet/)
-- [Car Wash & Exterior Valet](https://jakescarcare.ie/services/exterior-wash/)
+- [Exterior Wash](https://jakescarcare.ie/services/exterior-wash/)
 - [FAQ](https://jakescarcare.ie/faq/)
