@@ -3,7 +3,21 @@
 The website changes are live, but most local search visibility is decided
 *off* the website. These are the tasks only you can do. Times are rough.
 
-## 1. Google Search Console (~10 min, do first)
+> **What's new in this deploy:** the full on-page SEO is now live (canonical
+> tags, LocalBusiness/AutoWash structured data, keyword-first titles, real
+> sitemap + robots), and every page now also targets **"car wash"** — the
+> biggest missed search (~3,800 impressions/month we were sitting at position
+> ~7 on). The homepage, all 10 area pages and the exterior service page
+> (`/services/exterior-wash/`) now say "car wash" in their titles and copy.
+
+## 0. Turn on HTTPS (2 min, do this first)
+
+GitHub → your `JakesCarCare` repo → **Settings → Pages** → tick
+**"Enforce HTTPS."** Right now the `http://` version of the site answers
+without redirecting to `https://`, which splits ranking signals. This one
+toggle fixes it.
+
+## 1. Google Search Console (~10 min, do next)
 
 1. Go to <https://search.google.com/search-console> and sign in with the
    Google account that owns the business.
@@ -12,9 +26,16 @@ The website changes are live, but most local search visibility is decided
    jakescarcare.ie was bought), then click Verify.
    - If DNS feels awkward: choose **URL prefix** → `https://jakescarcare.ie`
      → verify by **HTML file** — send me the file and I'll add it to the site.
-3. Once verified: **Sitemaps** → submit `sitemap.xml`.
-4. **URL inspection** → paste `https://jakescarcare.ie/` → Request indexing.
-   Repeat for `/areas/roscommon-town/`, `/areas/longford-town/`, `/faq/`.
+3. Once verified: **Sitemaps** → submit `sitemap.xml` (re-submit even if it's
+   already there — it changed).
+4. **URL inspection** → paste each of these → Request indexing. Do the car-wash
+   page first, it's the big new target:
+   - `https://jakescarcare.ie/services/exterior-wash/` ← the "car wash" page
+   - `https://jakescarcare.ie/`
+   - `https://jakescarcare.ie/areas/roscommon-town/`
+   - `https://jakescarcare.ie/areas/longford-town/`
+   - `https://jakescarcare.ie/services/full-valet/`
+   - `https://jakescarcare.ie/faq/`
 
 ## 2. Bing Webmaster Tools (~3 min — feeds ChatGPT search)
 
@@ -25,6 +46,10 @@ Google Search Console** — one click, brings the site and sitemap across.
 
 Your profile is claimed and active. Make it match the website exactly:
 
+- **Categories** (do this first): keep your primary category, then **add
+  "Car wash" as a secondary category**. This is what puts you in the map pack
+  for "car wash near me" — worth ~600 map searches/month we're currently
+  missing. Also worth adding: "Car detailing service".
 - **Service area**: set to the towns we serve — Strokestown, Roscommon Town,
   Longford Town, Castlerea, Boyle, Carrick-on-Shannon, Ballymahon,
   Edgeworthstown. (Don't set a straight-line radius.)

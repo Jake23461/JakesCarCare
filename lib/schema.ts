@@ -63,7 +63,7 @@ export function localBusinessSchema() {
     sameAs: [siteConfig.facebookHref, siteConfig.tiktokHref],
     hasOfferCatalog: {
       "@type": "OfferCatalog",
-      name: "Mobile valeting services",
+      name: "Mobile valeting and car wash services",
       itemListElement: services.map((s) => {
         const range = priceRange(s.tag);
         return {
@@ -123,7 +123,7 @@ export function serviceSchema(opts: {
     "@context": "https://schema.org",
     "@type": "Service",
     name: opts.name,
-    serviceType: "Mobile car valeting",
+    serviceType: "Mobile car valeting and car wash",
     description: opts.description,
     url: `${SITE_URL}${opts.urlPath}`,
     provider: { "@id": BUSINESS_ID },
@@ -145,8 +145,8 @@ export function townServiceSchema(town: { name: string; county: string; slug: st
   return {
     "@context": "https://schema.org",
     "@type": "Service",
-    name: `Mobile car valeting in ${town.name}`,
-    serviceType: "Mobile car valeting",
+    name: `Mobile car valeting and car wash in ${town.name}`,
+    serviceType: "Mobile car valeting and car wash",
     url: `${SITE_URL}/areas/${town.slug}/`,
     provider: { "@id": BUSINESS_ID },
     areaServed: { "@type": "City", name: `${town.name}, ${town.county}` },
