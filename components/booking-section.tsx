@@ -179,6 +179,7 @@ export function BookingSection() {
 
         // Demand signal for the Hub — logged whether or not they book.
         logTravelEvent("travel_quote", {
+          eircode: quote.eircode,
           routingKey: quote.eircode.slice(0, 3),
           distanceKm: quote.distanceKm,
           durationMin: quote.durationMin,
@@ -388,6 +389,7 @@ export function BookingSection() {
       }
       if (travel) {
         logTravelEvent("travel_quote_booked", {
+          eircode: travel.eircode,
           routingKey: travel.eircode.slice(0, 3),
           distanceKm: travel.distanceKm,
           durationMin: travel.durationMin,
