@@ -1,4 +1,4 @@
 :HL["/_next/static/chunks/0kfnm~xvynte5.css","style"]
 :HL["/images/hero-wash.jpg","image",{"fetchPriority":"high"}]
 :HL["/gallery/Logo.png","image"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"areas","param":null,"prefetchHints":0,"slots":{"children":{"name":"town","param":{"type":"d","key":"carrick-on-shannon","siblings":null},"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}}}},"staleTime":300,"buildId":"ug3ZhBSecOXkiCJJbVgHc"}
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"areas","param":null,"prefetchHints":0,"slots":{"children":{"name":"town","param":{"type":"d","key":"carrick-on-shannon","siblings":null},"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}}}},"staleTime":300,"buildId":"cSCE7IE7JJ2lIT5R66HOJ"}
