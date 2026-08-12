@@ -38,7 +38,7 @@ export const faqs: Faq[] = [
   },
   {
     q: "How is the call-out fee worked out?",
-    a: "It's free if you're within 15 minutes' drive or 12 km of Strokestown. Beyond that it's €1 per kilometre after the first 12 km, rounded up to the nearest €5 — most of Roscommon works out at €5–€25. The booking form shows your exact fee on a map the moment you enter your Eircode.",
+    a: "It's free if you're within 15 minutes' drive or 12 km of Strokestown. Beyond that it's 50c per kilometre after the first 12 km, rounded up to the nearest €5 — and never more than €20, no matter where you are in the service area. Most of Roscommon works out at €5–€10. The booking form shows your exact fee on a map the moment you enter your Eircode.",
     tags: ["home", "pricing", "travel"],
   },
   {

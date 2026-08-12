@@ -13,7 +13,7 @@ if (!KEY) throw new Error("Set MAPS_KEY");
 
 const BASE = { lat: 53.7767, lng: -8.0983 }; // Strokestown
 // Fee rules — mirror TRAVEL_CONFIG in functions/index.js
-const FREE_MIN = 15, FREE_KM = 12, RATE = 1, ROUND = 5, MAX_KM = 45;
+const FREE_MIN = 15, FREE_KM = 12, RATE = 0.5, ROUND = 5, MAX_FEE = 20, MAX_KM = 45;
 
 const TOWN_META = [
   {
@@ -115,7 +115,9 @@ for (const meta of TOWN_META) {
   const inServiceArea = km <= MAX_KM;
   const freeZone = min <= FREE_MIN || km <= FREE_KM;
   const calloutFee =
-    !inServiceArea || freeZone ? 0 : Math.ceil(((km - FREE_KM) * RATE) / ROUND) * ROUND;
+    !inServiceArea || freeZone
+      ? 0
+      : Math.min(MAX_FEE, Math.ceil(((km - FREE_KM) * RATE) / ROUND) * ROUND);
   rows.push({ ...meta, drivingKm: km, drivingMin: min, calloutFee, inServiceArea, freeZone });
   console.log(`${meta.name}: ${km} km / ${min} min → ${inServiceArea ? (freeZone ? "free zone" : `€${calloutFee}`) : "OUT OF AREA"}`);
 }

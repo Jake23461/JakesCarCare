@@ -39,15 +39,20 @@ const mapsApiKey = defineSecret('MAPS_API_KEY');
 
 // ─── Travel / call-out fee ───────────────────────────────────────────────────
 // Jake travels from Strokestown. Within ~15 min drive (or under 12 km) there's
-// no call-out fee. Beyond that it's €1 per km past the free 12 km allowance,
-// rounded up to the nearest €5. Past maxKm the booking form blocks entirely.
+// no call-out fee. Beyond that it's €0.50 per km past the free 12 km
+// allowance, rounded up to the nearest €5 and capped at €20. Past maxKm the
+// booking form blocks entirely.
 // Tweak the numbers here, then redeploy: firebase deploy --only functions
+// (If the fee rules change, also update: lib/travel.ts mock,
+//  scripts/generate-town-data.mjs + regenerate, lib/faq.ts, app/areas/page.tsx,
+//  public/llms.txt, TRAVEL_FEE_SETUP.md — see that doc.)
 const TRAVEL_CONFIG = {
   base: { latitude: 53.7767, longitude: -8.0983 }, // Strokestown, Co. Roscommon
   freeDriveMinutes: 15,
   freeKm: 12,
-  ratePerKm: 1,
+  ratePerKm: 0.5,
   roundFeeToNearest: 5,
+  maxFee: 20,
   maxKm: 45,
 };
 
@@ -92,7 +97,10 @@ exports.calculateTravel = onCall(
     const freeZone = !tooFar && (durationMin <= cfg.freeDriveMinutes || distanceKm <= cfg.freeKm);
     const calloutFee = tooFar || freeZone
       ? 0
-      : Math.ceil(((distanceKm - cfg.freeKm) * cfg.ratePerKm) / cfg.roundFeeToNearest) * cfg.roundFeeToNearest;
+      : Math.min(
+          cfg.maxFee,
+          Math.ceil(((distanceKm - cfg.freeKm) * cfg.ratePerKm) / cfg.roundFeeToNearest) * cfg.roundFeeToNearest
+        );
 
     // Route geometry for the booking-form map
     const end = route.legs?.[0]?.endLocation?.latLng;

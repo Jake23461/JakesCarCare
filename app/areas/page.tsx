@@ -34,10 +34,11 @@ export default function AreasPage() {
           <p className="mt-4 max-w-2xl text-base text-foreground-muted">
             Jake drives to your home or workplace from Strokestown, Co.
             Roscommon. Call-out is <strong className="text-foreground">free within 12 km or a
-            15-minute drive</strong> (the green zone below). Beyond that it&apos;s €1 per
-            kilometre after the first 12 km, rounded up to the nearest €5 — and
-            the booking form shows your exact fee the moment you enter your
-            Eircode. Online booking covers everywhere within a 45 km drive.
+            15-minute drive</strong> (the green zone below). Beyond that it&apos;s 50c per
+            kilometre after the first 12 km, rounded up to the nearest €5 and{" "}
+            <strong className="text-foreground">never more than €20</strong> — the booking
+            form shows your exact fee the moment you enter your Eircode. Online
+            booking covers everywhere within a 45 km drive.
           </p>
 
           <div className="mt-10">

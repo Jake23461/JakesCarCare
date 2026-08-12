@@ -118,7 +118,9 @@ function mockQuote(eircode: string): TravelQuote | null {
   const tooFar = distanceKm > maxKm;
   const freeZone = !tooFar && (durationMin <= 15 || distanceKm <= 12);
   const calloutFee =
-    tooFar || freeZone ? 0 : Math.ceil((distanceKm - 12) / 5) * 5;
+    tooFar || freeZone
+      ? 0
+      : Math.min(20, Math.ceil(((distanceKm - 12) * 0.5) / 5) * 5);
 
   return {
     eircode: `${raw.slice(0, 3)} ${raw.slice(3)}`,

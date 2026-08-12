@@ -12,11 +12,13 @@ All rules live in one place: `TRAVEL_CONFIG` in [functions/index.js](functions/i
 | Rule | Value | Meaning |
 |---|---|---|
 | Free zone | ≤ 15 min drive (or ≤ 12 km) | No call-out fee |
-| Rate | €1 per km beyond the free 12 km | e.g. 20 km away → €8 → rounded to €10 |
-| Rounding | Up to the nearest €5 | Fees read clean: €10, €15, €20... |
+| Rate | €0.50 per km beyond the free 12 km | e.g. 20 km away → €4 → rounded to €5 |
+| Rounding | Up to the nearest €5 | Fees read clean: €5, €10, €15... |
+| Cap | €20 maximum | No fee ever exceeds €20 inside the area |
 | Cutoff | 45 km driving distance | Form blocks booking, offers WhatsApp instead |
 
-Examples: 20 km / 22 min → **+€10** · 30 km / 33 min → **+€20** · 44 km → **+€35** · 50 km → **blocked**.
+Examples: 20 km / 22 min → **+€5** · 30 km / 33 min → **+€10** · 44 km → **+€20 (cap)** · 50 km → **blocked**.
+(Fees halved + capped in Aug 2026 after a booking drop-off — was €1/km uncapped.)
 
 To change any number, edit `TRAVEL_CONFIG` and redeploy functions (step 4 below).
 

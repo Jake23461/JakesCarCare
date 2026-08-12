@@ -18,12 +18,13 @@ Payment on the day: cash or Revolut. Free cancellation with reasonable notice.
 ## Coverage & call-out fees
 
 - Free call-out within 12 km or ~15 minutes' drive of Strokestown
-- Beyond that: €1 per km after the first 12 km, rounded up to the nearest €5
+- Beyond that: 50c per km after the first 12 km, rounded up to the nearest €5,
+  capped at €20 maximum
 - Online booking limit: 45 km driving distance
-- Real driving distances from Strokestown: Roscommon Town 19.7 km (€10),
-  Longford Town 23.4 km (€15), Carrick-on-Shannon 25.8 km (€15),
-  Castlerea 30.1 km (€20), Boyle 30.9 km (€20), Ballymahon 35.5 km (€25),
-  Edgeworthstown 38.5 km (€30)
+- Real driving distances from Strokestown: Roscommon Town 19.7 km (€5),
+  Longford Town 23.4 km (€10), Carrick-on-Shannon 25.8 km (€10),
+  Castlerea 30.1 km (€10), Boyle 30.9 km (€10), Ballymahon 35.5 km (€15),
+  Edgeworthstown 38.5 km (€15)
 - By arrangement only (outside 45 km): Athlone, Loughrea
 
 ## Pages
