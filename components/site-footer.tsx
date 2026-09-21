@@ -126,7 +126,7 @@ export function SiteFooter() {
             <img
               src={siteConfig.logoSrc}
               alt={siteConfig.businessName}
-              className="mx-auto mb-4 h-14 w-auto opacity-90"
+              className="mx-auto mb-4 h-20 w-36 object-cover object-[center_45%] opacity-90"
             />
           )}
           <p className="text-sm font-semibold text-foreground">

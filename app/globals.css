@@ -1,13 +1,5 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: 'GoodTimes';
-  src: url('/fonts/GoodTimes-Regular.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
 /*
   Jake's Car Care — Design tokens
   Automotive palette: deep charcoal base, clean white type, signal red accent.
@@ -47,9 +39,9 @@
   --color-accent-dark: var(--accent-dark);
   --color-muted: var(--muted);
   --color-border: var(--border);
-  /* Inter loaded via next/font — variable injected by layout.tsx */
+  /* System fonts require no bundled font files or external font requests. */
   --font-sans: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-  --font-display: 'GoodTimes', system-ui, sans-serif;
+  --font-display: "Arial Black", "Arial", system-ui, sans-serif;
 }
 
 body {
@@ -138,7 +130,8 @@ html {
 
 .brand-wordmark {
   font-family: var(--font-display);
-  letter-spacing: 0.08em;
+  font-weight: 900;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 

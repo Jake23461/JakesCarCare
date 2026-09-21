@@ -9,13 +9,13 @@ import sharp from "sharp";
 import pngToIco from "png-to-ico";
 import { writeFileSync } from "node:fs";
 
-const LOGO = "public/gallery/Logo.png"; // 296×250, transparent
+const LOGO = "public/gallery/Logo.png"; // 1254×1254, transparent
 const BG = "#0a0a0a";
 
-// Car + sunburst live in the top portion; the two text lines start ~72% down.
+// Car + sunburst sit above the lettering in the supplied square logo.
 // (extract and trim must be separate pipelines — sharp trims before extracting)
 const cropped = await sharp(LOGO)
-  .extract({ left: 10, top: 15, width: 276, height: 165 })
+  .extract({ left: 50, top: 250, width: 1160, height: 500 })
   .png()
   .toBuffer();
 const mark = await sharp(cropped).trim().png().toBuffer();

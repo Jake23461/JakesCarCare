@@ -34,13 +34,14 @@ const gradientAndText = Buffer.from(`
         fill="#e5e5e5">Mobile Valeting — Roscommon &amp; Longford · 087 766 5058</text>
 </svg>`);
 
-const logo = await sharp(LOGO).resize({ height: 110 }).png().toBuffer();
+// Account for the transparent padding around the supplied square logo.
+const logo = await sharp(LOGO).resize({ height: 180 }).png().toBuffer();
 
 await sharp(SRC)
   .resize(1200, 630, { fit: "cover", position: "attention" })
   .composite([
     { input: gradientAndText, top: 0, left: 0 },
-    { input: logo, top: 40, left: 60 },
+    { input: logo, top: 0, left: 60 },
   ])
   .jpeg({ quality: 80, mozjpeg: true })
   .toFile("public/og.jpg");

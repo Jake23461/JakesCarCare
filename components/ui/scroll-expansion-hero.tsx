@@ -8,13 +8,12 @@
  *
  * Reusable for other client sites — pass all media, copy, and logo as props.
  *
- * Accessibility: prefers-reduced-motion → skips animation, shows expanded
- * state immediately with normal scroll behaviour.
+ * The reveal starts collapsed on every load and advances with scroll input.
  */
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 
 export interface ScrollExpandHeroProps {
   /** "video" plays a looping muted video; "image" shows a still reveal */
@@ -73,14 +72,13 @@ export function ScrollExpandHero({
   ctaSecondary,
   children,
 }: ScrollExpandHeroProps) {
-  const prefersReducedMotion = useReducedMotion();
-
-  const [progress, setProgress] = useState(prefersReducedMotion ? 1 : 0);
-  const [expanded, setExpanded] = useState(!!prefersReducedMotion);
+  // Keep the server and browser starting state identical until scroll input.
+  const [progress, setProgress] = useState(0);
+  const [expanded, setExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const progressRef = useRef(prefersReducedMotion ? 1 : 0);
-  const expandedRef = useRef(!!prefersReducedMotion);
+  const progressRef = useRef(0);
+  const expandedRef = useRef(false);
   const touchStartY = useRef(0);
 
   useEffect(() => {
@@ -91,7 +89,10 @@ export function ScrollExpandHero({
   }, []);
 
   useEffect(() => {
-    if (prefersReducedMotion) return;
+    // A refresh must return to the intro, not restore a position below it.
+    const previousScrollRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
 
     const advance = (delta: number) => {
       if (expandedRef.current) return;
@@ -127,7 +128,9 @@ export function ScrollExpandHero({
     };
 
     const handleScroll = () => {
-      if (!expandedRef.current) window.scrollTo(0, 0);
+      if (!expandedRef.current) {
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      }
     };
 
     window.addEventListener("wheel", handleWheel, { passive: false });
@@ -137,13 +140,14 @@ export function ScrollExpandHero({
     window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
+      window.history.scrollRestoration = previousScrollRestoration;
       window.removeEventListener("wheel", handleWheel);
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [prefersReducedMotion]);
+  }, []);
 
   // ── Visual interpolation ──────────────────────────────────────────────────
   const minW = isMobile ? 260 : 360;

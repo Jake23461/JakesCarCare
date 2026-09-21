@@ -50,7 +50,7 @@ export function Nav() {
         >
           <span
             aria-hidden="true"
-            className="block h-10 w-[72px] shrink-0 bg-contain bg-left bg-no-repeat sm:h-11 sm:w-[80px]"
+            className="block h-10 w-[72px] shrink-0 bg-cover bg-[position:center_45%] bg-no-repeat sm:h-11 sm:w-[80px]"
             style={{ backgroundImage: "url('/gallery/Logo.png')" }}
           />
           <span className="brand-wordmark hidden text-sm text-foreground sm:block">
